@@ -17,7 +17,11 @@ mvn package             # shaded runnable jar -> target/pgadmin3-javafx-reborn-1
 java -jar target/pgadmin3-javafx-reborn-1.0.0.jar
 ```
 
-- No tests directory exists; verification is done via the harness described below.
+- `mvn test` runs the JUnit 5 suite under `src/test/java`: pure-logic unit tests
+  (`quoteIdent`/`quoteLiteral`, the EXPLAIN parse→layout→render pipeline over the fixtures)
+  plus a headless `CodeArea` construction smoke test. It needs no DB and no display.
+  Broader verification (real-server tree-walk, live EXPLAIN) stays the opt-in harness
+  described below.
 - **JavaFX version is pinned to 26 on purpose**: JavaFX 26 requires JDK 24+ class
   files and the project targets `--release 24`. Do not change the JavaFX line without
   keeping the Java target in step (each JavaFX release tracks a matching JDK floor).
@@ -99,10 +103,17 @@ browser/ddl code has no JavaFX dependencies). Skip recursing into `CATALOG` obje
 (pg_catalog is huge) and skip DDL for system schemas. Baseline: 907 nodes / 803 DDLs / 0
 errors on PostgreSQL 18.4.
 
-GUI is not launchable headless (no Monocle); for UI verification, launch briefly in the
-background and check the log for exceptions:
+For a quick UI smoke check, launch briefly in the background and check the log for
+exceptions:
 `java -jar target/pgadmin3-javafx-reborn-1.0.0.jar > /tmp/app.log 2>&1 &` — the only expected output
 is JavaFX classpath/native-access warnings.
+
+Headless FX *is* now possible: JavaFX 26 bundles a headless glass platform (JDK-8324941),
+enabled with `-Dglass.platform=headless` — no Monocle, no Xvfb. The Surefire config passes
+that property, so FX-touching unit tests (e.g. the `CodeArea` construction guard for the
+RichTextFX trap above) run under `mvn test` with no display. It's still a POC, so full
+`MainWindow` launch headless is unproven — verify empirically before relying on it for
+whole-app smoke.
 
 **Graphical EXPLAIN** (`query/explain/*`) has its own non-GUI harness pattern, independent of
 the tree-walk harness above: fixture JSON files under `src/test-fixtures/explain/*.json`
