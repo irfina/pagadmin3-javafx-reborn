@@ -142,8 +142,15 @@ which replaces pgAdmin III's hand-rolled catalog joins for naming referenced obj
 - NOTICE/WARNING messages surface via `Statement.getWarnings()` (libpq notice processor
   equivalent).
 - Cancel uses `Statement.cancel()` (equivalent to `PQcancel`).
-- EXPLAIN / EXPLAIN ANALYZE prefix the statement; pgAdmin III's graphical explain
-  rendering was **not** ported (text plan only).
+- EXPLAIN / EXPLAIN ANALYZE run `EXPLAIN (FORMAT JSON [, ANALYZE, BUFFERS])` as a single
+  round trip (never text — a second, separately-formatted execution would run ANALYZE
+  twice) and populate a graphical plan diagram in a dedicated "Explain" tab, porting
+  pgAdmin III's `explainCanvas`/`explainShape` (icon+caption nodes, curved connectors,
+  InitPlan/SubPlan distinction, hover/click detail, zoom, PNG/clipboard export); see
+  `docs/plan/plan-01-graphical-explain.md` and its `-SUMMARY.md` for the full design and
+  deviations (vector glyphs instead of the ~30 `ex_*.png` assets; JSON parsing instead of
+  indented-text parsing, since the PG 9.6+ floor has `FORMAT JSON`). The text plan, derived
+  locally from the same parsed tree, still lands in Messages.
 - "Execute to file" streams the result to CSV instead of the grid.
 - History keeps timestamped statements, double-click recalls (pgAdmin III's history tab).
 - Scintilla lexing replaced by a regex `Pattern` over keywords/strings/comments/numbers/
@@ -213,7 +220,6 @@ macros were not migrated).
 | pgScript interpreter (`pgscript/`) | proprietary scripting dialect superseded by DO blocks / psql |
 | PL/pgSQL debugger plugin (`debugger/`) | requires server-side plugin protocol |
 | Graphical Query Builder (`gqb/`) | large bespoke canvas UI, low value vs. SQL editing |
-| Graphical EXPLAIN rendering | text EXPLAIN kept; graphical tree rendering deferred |
 | Server log viewer tab in Server Status | depended on obsolete `adminpack`/`pg_logdir_ls` |
 | Guru hints, tips-of-the-day, HTML help | documentation concern, not functional |
 | Favourites/macros in query tool | convenience features, deferred |

@@ -1,0 +1,29 @@
+[
+  {
+    "Plan": {
+      "Node Type": "Bitmap Heap Scan",
+      "Relation Name": "orders",
+      "Alias": "orders",
+      "Startup Cost": 4.36,
+      "Total Cost": 15.80,
+      "Plan Rows": 12,
+      "Plan Width": 40,
+      "Recheck Cond": "(customer_id = 7)",
+      "Rows Removed by Index Recheck": 0,
+      "Plans": [
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Parent Relationship": "Outer",
+          "Index Name": "orders_customer_id_idx",
+          "Startup Cost": 0.00,
+          "Total Cost": 4.36,
+          "Plan Rows": 12,
+          "Plan Width": 0,
+          "Index Cond": "(customer_id = 7)"
+        }
+      ]
+    },
+    "Planning Time": 0.101,
+    "Execution Time": 0.062
+  }
+]

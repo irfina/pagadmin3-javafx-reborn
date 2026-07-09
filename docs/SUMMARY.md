@@ -51,7 +51,11 @@ the legacy application's feature set.
   quoted identifiers), via RichTextFX
 - ✅ Execute (F5) — runs selection if present, else whole buffer; multiple result sets and update
   counts; NOTICE messages captured
-- ✅ Explain (F7) / Explain Analyze (Shift+F7)
+- ✅ Explain (F7) / Explain Analyze (Shift+F7) — graphical plan diagram (icon+caption nodes,
+  curved connectors, InitPlan/SubPlan distinction, hover detail, click-to-inspect, zoom/fit,
+  PNG/clipboard export) in a dedicated "Explain" tab, plus the derived text plan in Messages;
+  single `EXPLAIN (FORMAT JSON [, ANALYZE, BUFFERS])` round trip so ANALYZE never executes
+  twice
 - ✅ Cancel running query (`Statement.cancel`)
 - ✅ Execute to file (CSV export)
 - ✅ Data Output grid, Messages pane, Query History (double-click to recall)

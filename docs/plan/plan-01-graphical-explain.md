@@ -1,6 +1,7 @@
 # Plan 01 — Graphical EXPLAIN (pgAdmin III style)
 
-**Status: planned, not implemented.** This document is the design + implementation plan for
+**Status: implemented — see `plan-01-graphical-explain-SUMMARY.md`.** This document is the
+design + implementation plan for
 adding pgAdmin III's graphical EXPLAIN to PgAdmin3-JavaFx-Reborn's Query Tool. It closes the
 "graphical EXPLAIN rendering" gap listed in `docs/migration-design.md` §8.
 

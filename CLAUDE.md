@@ -21,7 +21,13 @@ java -jar target/pgadmin3-javafx-reborn-1.0.0.jar
 - **JavaFX version is pinned to 26 on purpose**: JavaFX 26 requires JDK 24+ class
   files and the project targets `--release 24`. Do not change the JavaFX line without
   keeping the Java target in step (each JavaFX release tracks a matching JDK floor).
-- The shaded jar is started through `com.mypgadmin.Launcher` (a non-`Application` main
+- **RichTextFX must track the JavaFX line**: on JavaFX 25+ it must be ≥ 0.11.7 — older
+  releases override `TextFlow.getUnderlineShape`, which newer JavaFX made final, and the
+  Query Tool dies with `IncompatibleClassChangeError` the moment a `CodeArea` is
+  constructed (FXMisc/RichTextFX#1282). This only surfaces at runtime, so after any
+  JavaFX/RichTextFX bump, verify by constructing a `CodeArea` against the shaded jar
+  (probe via `Platform.startup`), not just by compiling.
+- The shaded jar is started through `com.fxpgadmin.Launcher` (a non-`Application` main
   class) to bypass the "JavaFX runtime components are missing" classpath check. Any
   standalone JavaFX test program run against the shaded jar needs the same trick.
 
@@ -34,7 +40,11 @@ Properties tab); SQL-pane DDL lives in `ddl/DdlGenerator`. Connections: `db/Serv
 holds one maintenance-DB connection plus one cached `db/DbConnection` per expanded
 database; tool windows (`query/QueryToolWindow`, `data/DataEditorWindow`,
 `tools/ServerStatusWindow`) open their own dedicated connections and close them with the
-window. `ui/DetailPane` renders Properties/Statistics/Dependencies/Dependents + SQL pane.
+window. `query/QueryToolWindow`'s Explain (F7) / Explain Analyze (Shift+F7) run a single
+`EXPLAIN (FORMAT JSON [, ANALYZE, BUFFERS])` round trip through `query/explain/*`
+(`ExplainJsonParser` → `PlanNode` tree → `PlanLayout` + `ExplainCanvas` for the diagram,
+`ExplainTextRenderer` for the Messages-tab text). `ui/DetailPane` renders
+Properties/Statistics/Dependencies/Dependents + SQL pane.
 Registrations persist as JSON via `model/ServerRegistry` at `~/.pgadmin3-javafx-reborn/servers.json`.
 
 ### Adding a new object type to the browser
@@ -74,14 +84,14 @@ container, seed one object of every type, then walk the real code path
 (`TreeBuilder.childrenOf` recursively + `DdlGenerator.generate` per object) and count errors.
 
 ```bash
-docker run -d --rm --name mypgadmin-test -e POSTGRES_PASSWORD=pgtest -p 55432:5432 postgres:18
+docker run -d --rm --name fxpgadmin-test -e POSTGRES_PASSWORD=pgtest -p 55432:5432 postgres:18
 # seed objects (schema, table+PK/FK/check, index, trigger, rule, view, matview, sequence,
 # enum/composite type, domain, function, aggregate, collation, FTS config/dict,
 # FDW -> server -> user mapping, foreign table, roles, extra database)
 # compile a TestHarness against the shaded jar and run it:
 javac -cp target/pgadmin3-javafx-reborn-1.0.0.jar TestHarness.java
 java  -cp .:target/pgadmin3-javafx-reborn-1.0.0.jar TestHarness   # expect: errors=0
-docker stop mypgadmin-test
+docker stop fxpgadmin-test
 ```
 
 The harness connects with `ServerInfo`/`ServerSession` exactly like the app (no GUI needed —
@@ -94,10 +104,20 @@ background and check the log for exceptions:
 `java -jar target/pgadmin3-javafx-reborn-1.0.0.jar > /tmp/app.log 2>&1 &` — the only expected output
 is JavaFX classpath/native-access warnings.
 
+**Graphical EXPLAIN** (`query/explain/*`) has its own non-GUI harness pattern, independent of
+the tree-walk harness above: fixture JSON files under `src/test-fixtures/explain/*.json`
+(hand-written `EXPLAIN (FORMAT JSON)` output covering scan/join/aggregate/InitPlan/parallel/
+ModifyTable families) get parsed + laid out + text-rendered by a small harness compiled
+against the shaded jar (`ExplainJsonParser.parse` → `PlanLayout.layout` → pairwise
+non-overlap check → `ExplainTextRenderer.render` → line-count check); expect
+`fixtures=N errors=0`. Re-verify against a live server the same way as above (seeded
+`postgres:18` container, `EXPLAIN (FORMAT JSON [, ANALYZE])` over real queries through the
+same parser) to catch JSON-shape drift the hand-written fixtures might miss.
+
 ## Scope guardrails
 
 Deliberately **not** implemented (don't add casually — see docs/migration-design.md §8):
-Slony-I, pgAgent, pgScript, PL/pgSQL debugger, Graphical Query Builder, graphical EXPLAIN,
+Slony-I, pgAgent, pgScript, PL/pgSQL debugger, Graphical Query Builder,
 server logfile viewer. Property-*edit* dialogs exist only for server/database/schema/role;
 other types use CREATE-SQL templates opened in the Query Tool (`NewObjectDialogs.template`).
 

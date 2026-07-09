@@ -47,7 +47,7 @@ server registry (wxConfig)             model/ServerRegistry + ServerInfo (JSON)
 ## Package layout
 
 ```
-com.mypgadmin
+com.fxpgadmin
 ├── PgAdminApp, Launcher      – JavaFX Application entry + shaded-jar launcher
 ├── model                     – ServerInfo, ServerRegistry (persisted registrations)
 ├── db                        – DbConnection (JDBC wrapper, identifier/literal quoting,
@@ -121,8 +121,22 @@ parent object (e.g. the table of a constraint) is taken from the tree structure.
 The Query Tool runs the **selected text if any, else the whole buffer** (pgAdmin III's rule) on a
 worker thread through a plain `Statement`, walking multiple result sets/update counts, streaming
 NOTICE-level warnings into the Messages tab, and supporting `Statement.cancel()` from the Cancel
-button. EXPLAIN / EXPLAIN ANALYZE simply prefix the statement. "Execute to file" writes CSV
-instead of populating the grid.
+button. "Execute to file" writes CSV instead of populating the grid. `runSql` and `runExplain`
+share the connect/thread/button-state scaffolding (`ensureConnected`/`runWorker`/`finishWorker`
+in `QueryToolWindow`).
+
+EXPLAIN (F7) / EXPLAIN ANALYZE (Shift+F7) run `EXPLAIN (FORMAT JSON [, ANALYZE, BUFFERS]) <sql>`
+as a **single** round trip — critical for ANALYZE, which executes the query — and parse the JSON
+with `com.fxpgadmin.query.explain.ExplainJsonParser` into a `PlanNode` tree (`ExplainJsonParser`,
+`PlanNode`, `ExplainResult`). Everything not mapped to a typed field lands in each node's
+`details` map verbatim, so future PostgreSQL versions never lose information without parser
+changes. `ExplainTextRenderer` turns the same tree back into indented text for the Messages tab
+(no second execution), and `ExplainCanvas` renders it as pgAdmin III's explainCanvas did: an
+`ExplainIcons`-drawn glyph + two-line caption per node (`PlanLayout` computes a depth-column /
+leaf-stacked layout), curved `CubicCurve` connectors (dashed for InitPlan/SubPlan), hover
+tooltips, a click-to-open modeless property grid (reusing `DetailPane.KV`), zoom/fit, and PNG /
+clipboard export via `SwingFXUtils`. The "Explain" tab sits between Data Output and Messages in
+`QueryToolWindow`'s `outputTabs`.
 
 ### Data editing
 

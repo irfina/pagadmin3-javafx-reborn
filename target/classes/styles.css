@@ -29,3 +29,57 @@
 .lineno {
     -fx-background-color: #f0f0f0;
 }
+
+/* Graphical EXPLAIN (Query Tool "Explain" tab) */
+.explain-canvas {
+    -fx-background-color: white;
+}
+
+.explain-node {
+    -fx-background-color: #f7fafd;
+    -fx-border-color: #2b4a6f;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+.explain-node:hover {
+    -fx-background-color: #eaf2fb;
+    -fx-border-color: #4a78ab;
+    -fx-border-width: 1.6px;
+    -fx-effect: dropshadow(gaussian, rgba(43,74,111,0.35), 6, 0.2, 0, 1);
+}
+
+.explain-node-subplan {
+    -fx-border-style: segments(4, 3);
+}
+
+.explain-caption-1 {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+}
+
+.explain-caption-2 {
+    -fx-font-size: 10px;
+    -fx-text-fill: #555555;
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+}
+
+.explain-connector {
+    -fx-stroke: #7f9bb8;
+    -fx-stroke-width: 1.4px;
+}
+
+.explain-connector-subplan {
+    -fx-stroke-dash-array: 5 4;
+    -fx-stroke: #a0a0a0;
+}
+
+.explain-connector-label {
+    -fx-font-size: 9px;
+    -fx-fill: #666666;
+}

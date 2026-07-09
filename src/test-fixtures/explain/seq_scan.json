@@ -1,0 +1,19 @@
+[
+  {
+    "Plan": {
+      "Node Type": "Seq Scan",
+      "Parallel Aware": false,
+      "Async Capable": false,
+      "Relation Name": "customers",
+      "Alias": "customers",
+      "Startup Cost": 0.00,
+      "Total Cost": 35.50,
+      "Plan Rows": 2550,
+      "Plan Width": 98,
+      "Filter": "(id > 10)",
+      "Rows Removed by Filter": 5
+    },
+    "Planning Time": 0.123,
+    "Execution Time": 1.045
+  }
+]
