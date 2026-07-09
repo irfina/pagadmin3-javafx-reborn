@@ -31,3 +31,11 @@ backup/restore.
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — design, package layout, pgAdmin III mapping
 - [docs/SUMMARY.md](docs/SUMMARY.md) — implemented feature list vs. pgAdmin III 1.22
+- [docs/migration-design.md](docs/migration-design.md) — full pgAdmin III → JavaFX migration record
+
+## License and attribution
+
+This project is a Java/JavaFX port of [pgAdmin III](https://github.com/pgadmin-org/pgadmin3)
+1.22 (`REL-1_22_0_PATCHES`), © 2002–2016 The pgAdmin Development Team. It is distributed
+under the same permissive [PostgreSQL License](LICENSE) as the original — free to use,
+copy, modify, and distribute, including for commercial purposes, without fee.
