@@ -1,0 +1,31 @@
+/* Query tool editor */
+.sql-editor {
+    -fx-font-family: "Menlo", "Consolas", "monospace";
+    -fx-font-size: 13px;
+}
+
+.sql-keyword {
+    -fx-fill: #00007f;
+    -fx-font-weight: bold;
+}
+
+.sql-string {
+    -fx-fill: #7f0000;
+}
+
+.sql-comment {
+    -fx-fill: #007f00;
+    -fx-font-style: italic;
+}
+
+.sql-number {
+    -fx-fill: #7f007f;
+}
+
+.sql-ident {
+    -fx-fill: #3f3f7f;
+}
+
+.lineno {
+    -fx-background-color: #f0f0f0;
+}
