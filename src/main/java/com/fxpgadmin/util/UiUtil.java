@@ -5,6 +5,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.stage.Window;
 
 import java.util.Optional;
 
@@ -45,5 +46,18 @@ public final class UiUtil {
         a.setHeaderText(title);
         Optional<ButtonType> r = a.showAndWait();
         return r.isPresent() && r.get() == ButtonType.YES;
+    }
+
+    public enum Answer { YES, NO, CANCEL }
+
+    public static Answer confirmYesNoCancel(Window owner, String title, String message) {
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION, message,
+                ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+        a.setTitle(title);
+        a.setHeaderText(title);
+        if (owner != null) a.initOwner(owner);
+        Optional<ButtonType> r = a.showAndWait();
+        if (r.isEmpty() || r.get() == ButtonType.CANCEL) return Answer.CANCEL;
+        return r.get() == ButtonType.YES ? Answer.YES : Answer.NO;
     }
 }

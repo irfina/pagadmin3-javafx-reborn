@@ -70,6 +70,7 @@ public class QueryToolWindow {
     private final AtomicReference<Statement> running = new AtomicReference<>();
     private Button executeBtn, cancelBtn;
     private Stage stage;
+    private String savedText = "";
 
     public QueryToolWindow(ServerSession session, String database, String initialSql) {
         this.session = session;
@@ -80,6 +81,7 @@ public class QueryToolWindow {
             UiUtil.error("Query Tool connection failed", e);
         }
         if (initialSql != null) editor.replaceText(initialSql);
+        savedText = editor.getText();
     }
 
     public void show() {
@@ -125,6 +127,7 @@ public class QueryToolWindow {
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.F7, KeyCombination.SHIFT_DOWN),
                 () -> runExplain(true));
         stage.setScene(scene);
+        stage.setOnCloseRequest(e -> { if (!confirmClose()) e.consume(); });
         stage.setOnHidden(e -> { if (conn != null) conn.close(); });
         statusConn.setText(session.getServer().getUsername() + "@" + session.getServer().getHost()
                 + ":" + session.getServer().getPort() + "/" + database);
@@ -356,27 +359,56 @@ public class QueryToolWindow {
         else Platform.runLater(() -> messages.appendText(msg));
     }
 
+    private boolean hasUnsavedChanges() {
+        String t = editor.getText();
+        return !t.isBlank() && !t.equals(savedText);
+    }
+
+    /**
+     * Yes/No/Cancel gate shared by window-close and Open-over-dirty-buffer. Cancel/Esc
+     * return false (caller must abort). Any future "Close" menu item/accelerator must
+     * call {@code if (confirmClose()) stage.close();} rather than {@code stage.close()}
+     * directly, since {@code onCloseRequest} only fires for external close requests.
+     *
+     * @return true if the caller may proceed (discard, or successfully saved)
+     */
+    private boolean confirmClose() {
+        if (!hasUnsavedChanges()) return true;
+        return switch (UiUtil.confirmYesNoCancel(stage, "Query",
+                "The text in the query window has changed.\nDo you want to save changes?")) {
+            case YES -> saveFile();
+            case NO -> true;
+            case CANCEL -> false;
+        };
+    }
+
     private void openFile() {
+        if (!confirmClose()) return;
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("SQL files", "*.sql"));
         File f = fc.showOpenDialog(stage);
         if (f == null) return;
         try {
             editor.replaceText(Files.readString(f.toPath()));
+            savedText = editor.getText();
         } catch (IOException e) {
             UiUtil.error("Open failed", e);
         }
     }
 
-    private void saveFile() {
+    /** @return true if the file was written; false on chooser cancel or write failure. */
+    private boolean saveFile() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("SQL files", "*.sql"));
         File f = fc.showSaveDialog(stage);
-        if (f == null) return;
+        if (f == null) return false;
         try {
             Files.writeString(f.toPath(), editor.getText());
+            savedText = editor.getText();
+            return true;
         } catch (IOException e) {
             UiUtil.error("Save failed", e);
+            return false;
         }
     }
 }
