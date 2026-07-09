@@ -3,7 +3,7 @@
 A desktop PostgreSQL administration tool — a JavaFX re-implementation of the legacy
 **pgAdmin III 1.22** application.
 
-- Java 21, JavaFX 23, Maven
+- Java 24, JavaFX 26, Maven
 - Object browser with the full pgAdmin III tree (servers → databases → schemas → tables → …)
 - Properties / Statistics / Dependencies / Dependents tabs + SQL (DDL) pane
 - Query Tool with syntax highlighting, EXPLAIN, cancel, history, CSV export
@@ -24,7 +24,7 @@ mvn package
 java -jar target/pgadmin3-javafx-reborn-1.0.0.jar
 ```
 
-Requires JDK 21+ and a PostgreSQL 9.6+ server. `pg_dump`/`pg_restore` must be on PATH for
+Requires JDK 24+ and a PostgreSQL 9.6+ server. `pg_dump`/`pg_restore` must be on PATH for
 backup/restore.
 
 ## Documentation
