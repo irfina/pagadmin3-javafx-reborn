@@ -72,6 +72,7 @@ public class MainWindow {
     public void show(Stage stage) {
         this.stage = stage;
         stage.setTitle("PgAdmin3-JavaFx-Reborn - PostgreSQL administration (pgAdmin III style)");
+        stage.getIcons().addAll(Icons.stageIcons("pgAdmin3"));
 
         tree.setRoot(rootItem);
         rootItem.setExpanded(true);

@@ -54,7 +54,7 @@ public final class Icons {
      */
     public static List<Image> stageIcons(String baseName) {
         List<Image> out = new ArrayList<>();
-        for (String n : new String[] { baseName, baseName + "-32" }) {
+        for (String n : new String[] { baseName, baseName + "-16", baseName + "-32" }) {
             Image img = image(n);
             if (img != null) out.add(img);
         }

@@ -27,6 +27,7 @@ class IconsTest {
             "file_open", "file_save", "query_execute", "query_execfile",
             "query_explain", "query_cancel", "edit_clear",
             "readdata", "create", "delete", "sortfilter", "terminate_backend",
+            "pgAdmin3", "pgAdmin3-16", "pgAdmin3-32", "pgAdmin3-512",
     };
 
     @Test
@@ -72,10 +73,12 @@ class IconsTest {
         AtomicReference<List<Image>> missingIcons = new AtomicReference<>();
         CountDownLatch done = new CountDownLatch(1);
 
+        AtomicReference<List<Image>> pgAdmin3Icons = new AtomicReference<>();
         Runnable task = () -> {
             try {
                 sqlIcons.set(Icons.stageIcons("sql"));
                 missingIcons.set(Icons.stageIcons("nonexistent-icon"));
+                pgAdmin3Icons.set(Icons.stageIcons("pgAdmin3"));
             } catch (Throwable t) {
                 error.set(t);
             } finally {
@@ -90,6 +93,8 @@ class IconsTest {
 
         assertFalse(sqlIcons.get().isEmpty(), "sql base name should yield at least one variant");
         assertTrue(missingIcons.get().isEmpty(), "unknown base name should yield an empty list");
+        assertTrue(pgAdmin3Icons.get().size() >= 3,
+                "pgAdmin3 base name should yield the 16/32/128 stage-icon set");
     }
 
     /** Start the toolkit; if some earlier test already did, just enqueue onto the FX thread. */

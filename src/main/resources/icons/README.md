@@ -76,3 +76,22 @@ Object / collection icons, by object type (object icon — collection icon):
   `"Type"` property: `primarykey`, `foreignkey`, `unique`, `exclude`, `check`
   (anything else falls back to `constraints`) — pgAdmin III modelled these as five
   separate factories, each with its own icon.
+
+## Application icon
+
+Same provenance as the toolbar and tree icons above: copied unmodified from
+pgAdmin III 1.22.2 (`pgadmin/include/images/` and `pkg/mac/`), (c) the pgAdmin
+Development Team, PostgreSQL licence — this is the original pgAdmin III elephant
+logo, used here for the Dock/taskbar/window icon and the macOS `.app` bundle
+(plan-05).
+
+| File | Source | Use |
+|---|---|---|
+| `pgAdmin3-16.png` | `pgadmin/include/images/pgAdmin3-16.png` | JavaFX stage icon (small) |
+| `pgAdmin3-32.png` | `pgadmin/include/images/pgAdmin3-32.png` | JavaFX stage icon (medium) |
+| `pgAdmin3.png` | `pgadmin/include/images/pgAdmin3.png` (127x128 — width is 127, not 128, in the original asset; not "fixed" here) | JavaFX stage icon (large) |
+| `pgAdmin3-512.png` | extracted from `pkg/mac/pgAdmin3.icns` via `iconutil -c iconset` (not copied as-is — the icns has no standalone PNG asset) | macOS Dock icon at runtime (`java.awt.Taskbar.setIconImage`), crisp on retina |
+
+`packaging/macos/pgAdmin3.icns` (copied unmodified from `pkg/mac/pgAdmin3.icns`) is
+the fifth file in this set; it lives outside the runtime classpath and feeds the
+`jpackage` `.app` bundle icon in `packaging/macos/build-app.sh` instead.
