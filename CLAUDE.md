@@ -15,6 +15,7 @@ mvn -q compile          # fast check
 mvn javafx:run          # run from sources (needs JDK 24+)
 mvn package             # shaded runnable jar -> target/pgadmin3-javafx-reborn-1.0.0.jar
 java -jar target/pgadmin3-javafx-reborn-1.0.0.jar
+packaging/macos/build-app.sh   # optional: local unsigned macOS .app (jpackage, JDK 24+)
 ```
 
 - `mvn test` runs the JUnit 5 suite under `src/test/java`: pure-logic unit tests

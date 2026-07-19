@@ -27,6 +27,16 @@ java -jar target/pgadmin3-javafx-reborn-1.0.0.jar
 Requires JDK 24+ and a PostgreSQL 9.6+ server. `pg_dump`/`pg_restore` must be on PATH for
 backup/restore.
 
+On macOS you can optionally build a native double-clickable app bundle with the pgAdmin III
+icon:
+
+```bash
+packaging/macos/build-app.sh   # -> target/app-image/PgAdmin3-JavaFx-Reborn.app
+```
+
+This is a local convenience, not a release artifact — the `.app` is unsigned and
+unnotarized, so first launch needs right-click → Open.
+
 ## Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — design, package layout, pgAdmin III mapping
