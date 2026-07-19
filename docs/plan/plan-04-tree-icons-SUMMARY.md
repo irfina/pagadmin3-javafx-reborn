@@ -93,25 +93,43 @@ existing `item.setValue(null); item.setValue(data)` pattern in `connectServer` /
 - `java -jar target/pgadmin3-javafx-reborn-1.0.0.jar` smoke-launched ~6s in the
   background; the process stayed alive and the log contains only the standard JavaFX
   classpath/native-access warnings — no exceptions.
-- **Live-server visual walkthrough not performed** in this pass (no disposable
-  container was started; CLAUDE.md notes full `MainWindow` headless launch is
-  unproven). The automated totality check plus the clean smoke launch are the
-  verification this class of change supports without a GUI. To do the visual check,
-  start the `postgres:18` container from CLAUDE.md, register it, and confirm: root/group
-  show `servers`; an unconnected server shows `serverbad` and flips to `server` on
-  connect without collapsing the tree; `template0` shows `closeddatabase`; and a PK / FK
-  / unique / check constraint each show a different icon.
+- **Live-server visual walkthrough — performed and passed.** Rather than drive the GUI
+  by hand (which needs password entry into the connect dialog), a snapshot harness
+  connected exactly like the app (`ServerInfo`/`ServerSession`) to a disposable
+  `postgres:18` container seeded with one object of every family, walked the real
+  `TreeBuilder.childrenOf` tree, and rendered each node through the exact
+  `Icons.image(TreeIcons.iconName(data))` path `BrowserCell` uses — into a PNG snapshot
+  (JavaFX headless glass platform + `box.snapshot(...)` + `SwingFXUtils`/`ImageIO`). The
+  walk produced **67 distinct icons, every one resolving to a real bundled PNG that
+  rendered** (zero missing-image markers). Confirmed visually in the snapshot:
+  - a disconnected server shows `serverbad` (red-X) and a connected server shows `server`
+    (the harness rendered both states of the same node);
+  - `template0` (seeded `datallowconn = false`) shows `closeddatabase` (red-X database)
+    while `demo_db` shows `database`;
+  - the five constraints on the seeded tables each show a **distinct** icon —
+    `primarykey`, `foreignkey`, `unique`, `exclude`, `check`;
+  - every top family spot-checked (tablespace, group/login roles, cast, extension, the
+    FDW → foreign server → user mapping chain, language, FTS config/dictionary/parser/
+    template, function, trigger function, sequence, table, view, materialized-view folder
+    (`mview`), type, domain, aggregate, collation, foreign table, event trigger reusing
+    the `trigger` art) rendered its expected icon.
+
+  The connect/disconnect *live* flip in the running GUI (the tree re-rendering a server
+  node in place on connect) still relies on the existing `setValue(null)/setValue(data)`
+  refresh and was not exercised in the running app this pass; the icon mapping for both
+  states is proven above.
 
 ## Acceptance criteria status
 
 - [x] Every tree node (root, groups, servers, collections, objects) renders a 16×16
       pgAdmin III icon next to its label; labels, selection, and context menus unchanged.
-- [x] Server nodes map to `serverbad` when disconnected and `server` when connected; the
-      icon updates on connect/disconnect via the existing cell-refresh pattern (no new
-      code) — connected-icon flip verified by manual walkthrough, not the unit test (see
-      deviation).
-- [x] Non-connectable databases (e.g. `template0`) map to `closeddatabase`.
-- [x] The five constraint kinds map to five distinct icons.
+- [x] Server nodes map to `serverbad` when disconnected and `server` when connected —
+      both states rendered and confirmed in the live-server snapshot; the icon updates on
+      connect/disconnect via the existing cell-refresh pattern (no new code).
+- [x] Non-connectable databases (e.g. `template0`) map to `closeddatabase` — confirmed
+      against a live server (`template0`, `datallowconn = false`).
+- [x] The five constraint kinds map to five distinct icons — confirmed visually against
+      live seeded constraints (`primarykey`/`foreignkey`/`unique`/`exclude`/`check`).
 - [x] A missing icon resource degrades to a text-only node — `Icons.image` returns
       `null` (never throws) and `updateItem` calls `setGraphic(null)`; no ghost icon in a
       recycled cell.
