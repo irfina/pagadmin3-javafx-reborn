@@ -73,16 +73,22 @@ public class ExplainCanvas extends BorderPane {
 
     private ToolBar buildToolbar() {
         Button zoomIn = new Button("Zoom In");
+        zoomIn.setTooltip(new Tooltip("Zoom in."));
         zoomIn.setOnAction(e -> setZoom(zoomFactor * 1.25));
         Button zoomOut = new Button("Zoom Out");
+        zoomOut.setTooltip(new Tooltip("Zoom out."));
         zoomOut.setOnAction(e -> setZoom(zoomFactor / 1.25));
         Button zoomReset = new Button("100%");
+        zoomReset.setTooltip(new Tooltip("Reset zoom to 100%."));
         zoomReset.setOnAction(e -> setZoom(1.0));
         Button fit = new Button("Fit to Window");
+        fit.setTooltip(new Tooltip("Fit the plan diagram to the window."));
         fit.setOnAction(e -> fitToWindow());
         Button savePng = new Button("Save as PNG");
+        savePng.setTooltip(new Tooltip("Save the plan diagram as a PNG image."));
         savePng.setOnAction(e -> saveAsPng());
         Button copyImage = new Button("Copy Image");
+        copyImage.setTooltip(new Tooltip("Copy the plan diagram to the clipboard."));
         copyImage.setOnAction(e -> copyImage());
         return new ToolBar(zoomIn, zoomOut, zoomReset, fit, new Separator(), savePng, copyImage);
     }

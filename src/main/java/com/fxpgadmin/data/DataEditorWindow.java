@@ -3,6 +3,7 @@ package com.fxpgadmin.data;
 import com.fxpgadmin.browser.DbObject;
 import com.fxpgadmin.db.DbConnection;
 import com.fxpgadmin.db.ServerSession;
+import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -81,13 +82,15 @@ public class DataEditorWindow {
         filterField.setPrefWidth(280);
         sortField.setPromptText("ORDER BY (without ORDER BY)");
         sortField.setPrefWidth(200);
-        Button apply = new Button("Apply filter/sort");
+        Button apply = Icons.toolButton(new Button("Apply filter/sort"), "sortfilter",
+                "Sort/filter options.");
         apply.setOnAction(e -> refresh());
-        Button refresh = new Button("Refresh");
+        Button refresh = Icons.toolButton(new Button("Refresh"), "readdata", "Refresh.");
         refresh.setOnAction(e -> refresh());
-        Button addRow = new Button("Insert row");
+        Button addRow = Icons.toolButton(new Button("Insert row"), "create", "Insert a new row.");
         addRow.setOnAction(e -> insertRow());
-        Button deleteRow = new Button("Delete row(s)");
+        Button deleteRow = Icons.toolButton(new Button("Delete row(s)"), "delete",
+                "Delete selected rows.");
         deleteRow.setOnAction(e -> deleteRows());
         javafx.scene.control.ComboBox<Integer> limit =
                 new javafx.scene.control.ComboBox<>(FXCollections.observableArrayList(100, 500, 1000, 0));
