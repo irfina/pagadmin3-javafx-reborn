@@ -275,6 +275,41 @@ if none registered):
    extension, FDW chain, language, FTS objects, function, trigger function, sequence,
    view, materialized view, type, domain, aggregate, collation, foreign table).
 
+## Step 7 — Documentation updates
+
+The icon work (plan-03, already implemented, and this plan) leaves a few doc spots
+stale. Fold these edits into this plan's implementation; keep each one to the minimal
+wording change described — do not restructure the documents.
+
+1. **`CLAUDE.md`** — the `mvn test` bullet enumerates the suite ("pure-logic unit
+   tests (`quoteIdent`/`quoteLiteral`, the EXPLAIN parse→layout→render pipeline …)
+   plus a headless `CodeArea` construction smoke test"). Extend the enumeration with
+   the icon guards, e.g. "… plus icon resource/mapping guards (`IconsTest`,
+   `TreeIconsTest`) and a headless `CodeArea` construction smoke test."
+2. **`docs/ARCHITECTURE.md`**
+   - Package layout: add `Icons` to the `util` row's class list and `TreeIcons` to
+     the `ui` row's. Add a line noting `src/main/resources/icons/` holds the pgAdmin
+     III 1.22.2 icon assets (PNG, with provenance README).
+   - "Browser tree" key-mechanisms section: one sentence — tree nodes render the
+     original pgAdmin III icons, including the state variants (`serverbad` for
+     disconnected servers, `closeddatabase` for non-connectable databases).
+3. **`docs/SUMMARY.md`**
+   - Object browser checklist: add
+     "✅ pgAdmin III node icons for every tree node, incl. disconnected-server and
+     non-connectable-database state variants".
+   - Server management or a general UI line for plan-03's work: add
+     "✅ pgAdmin III toolbar icons in all tool windows; SQL window icon on the Query
+     Tool" (place it wherever it reads naturally — one line, one ✅).
+   - Code inventory table: `UI` row highlights gain `TreeIcons`; `Util` row
+     highlights gain `Icons`.
+4. **`docs/migration-design.md`** — *optional, skip if time-boxed*: one row in the
+   §2 technology-substitutions table — pgAdmin III's embedded wx image arrays
+   (`*_png_img`) → PNGs copied unmodified from the 1.22.2 tarball into
+   `src/main/resources/icons/`, loaded via `util/Icons` — and a sentence at the end
+   of §5.1 pointing at `docs/plan/plan-03-toolbar-icons-SUMMARY.md` and
+   `plan-04-tree-icons-SUMMARY.md` (same pattern as §5.6's reference to plan-01).
+   If skipped, say so in the plan-04 summary doc.
+
 ## Deliverables / touch list
 
 - `src/main/resources/icons/*.png` — the 71 tree icons (Step 1)
@@ -282,6 +317,8 @@ if none registered):
 - `src/main/java/com/fxpgadmin/ui/TreeIcons.java` (new)
 - `src/main/java/com/fxpgadmin/ui/MainWindow.java` — `BrowserCell.updateItem` only
 - `src/test/java/com/fxpgadmin/ui/TreeIconsTest.java` (new)
+- `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/SUMMARY.md` (+ optionally
+  `docs/migration-design.md`) — the Step 7 doc touch-ups
 - `docs/plan/plan-04-tree-icons-SUMMARY.md` (written after implementation: what was
   done, any icon substitutions discovered, verification results)
 
@@ -299,3 +336,6 @@ if none registered):
   {object, collection} resolves to a real bundled resource).
 - The shaded jar contains all icons and smoke-launches cleanly.
 - Provenance documented in `src/main/resources/icons/README.md`.
+- The Step 7 doc updates are applied: `CLAUDE.md`'s test-suite enumeration mentions
+  the icon tests, `docs/ARCHITECTURE.md`'s package layout lists `Icons`/`TreeIcons`,
+  and `docs/SUMMARY.md`'s checklist + code inventory cover the icon work.
