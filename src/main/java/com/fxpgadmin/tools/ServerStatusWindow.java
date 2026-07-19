@@ -3,6 +3,7 @@ package com.fxpgadmin.tools;
 import com.fxpgadmin.db.DbConnection;
 import com.fxpgadmin.db.ServerSession;
 import com.fxpgadmin.query.ResultTable;
+import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -49,11 +50,13 @@ public class ServerStatusWindow {
         Stage stage = new Stage();
         stage.setTitle("Server Status - " + session.getServer().getName());
 
-        Button refresh = new Button("Refresh");
+        Button refresh = Icons.toolButton(new Button("Refresh"), "readdata", "Refresh.");
         refresh.setOnAction(e -> refreshAll());
-        Button cancelQuery = new Button("Cancel query");
+        Button cancelQuery = Icons.toolButton(new Button("Cancel query"), "query_cancel",
+                "Cancel query.");
         cancelQuery.setOnAction(e -> signalBackend("pg_cancel_backend"));
-        Button terminate = new Button("Terminate backend");
+        Button terminate = Icons.toolButton(new Button("Terminate backend"), "terminate_backend",
+                "Terminate backend.");
         terminate.setOnAction(e -> signalBackend("pg_terminate_backend"));
         ComboBox<Integer> interval = new ComboBox<>(
                 javafx.collections.FXCollections.observableArrayList(0, 1, 5, 10, 30));

@@ -7,6 +7,7 @@ import com.fxpgadmin.query.explain.ExplainJsonParser;
 import com.fxpgadmin.query.explain.ExplainResult;
 import com.fxpgadmin.query.explain.ExplainTextRenderer;
 import com.fxpgadmin.util.CsvExporter;
+import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -87,6 +88,7 @@ public class QueryToolWindow {
     public void show() {
         stage = new Stage();
         stage.setTitle("Query - " + session.getServer().getName() + " - " + database);
+        stage.getIcons().addAll(Icons.stageIcons("sql"));
 
         editor.setParagraphGraphicFactory(LineNumberFactory.get(editor));
         editor.getStyleClass().add("sql-editor");
@@ -138,22 +140,26 @@ public class QueryToolWindow {
     private static Tab closableFalse(Tab t) { t.setClosable(false); return t; }
 
     private ToolBar buildToolbar() {
-        Button open = new Button("Open");
+        Button open = Icons.toolButton(new Button("Open"), "file_open", "Open file.");
         open.setOnAction(e -> openFile());
-        Button save = new Button("Save");
+        Button save = Icons.toolButton(new Button("Save"), "file_save", "Save file.");
         save.setOnAction(e -> saveFile());
-        executeBtn = new Button("Execute (F5)");
+        executeBtn = Icons.toolButton(new Button("Execute (F5)"), "query_execute",
+                "Execute query (F5).");
         executeBtn.setOnAction(e -> executeQuery());
-        Button toFile = new Button("Execute to file");
+        Button toFile = Icons.toolButton(new Button("Execute to file"), "query_execfile",
+                "Execute query, write result to file.");
         toFile.setOnAction(e -> executeToFile());
-        Button explain = new Button("Explain (F7)");
+        Button explain = Icons.toolButton(new Button("Explain (F7)"), "query_explain",
+                "Explain query (F7).");
         explain.setOnAction(e -> runExplain(false));
-        Button explainAnalyze = new Button("Explain Analyze");
+        Button explainAnalyze = Icons.toolButton(new Button("Explain Analyze"), "query_explain",
+                "Explain Analyze query (Shift+F7).");
         explainAnalyze.setOnAction(e -> runExplain(true));
-        cancelBtn = new Button("Cancel");
+        cancelBtn = Icons.toolButton(new Button("Cancel"), "query_cancel", "Cancel query.");
         cancelBtn.setDisable(true);
         cancelBtn.setOnAction(e -> cancel());
-        Button clear = new Button("Clear");
+        Button clear = Icons.toolButton(new Button("Clear"), "edit_clear", "Clear edit window.");
         clear.setOnAction(e -> editor.clear());
         return new ToolBar(open, save, new Separator(),
                 executeBtn, toFile, explain, explainAnalyze, cancelBtn, new Separator(), clear);

@@ -18,6 +18,7 @@ import com.fxpgadmin.tools.BackupDialog;
 import com.fxpgadmin.tools.MaintenanceDialog;
 import com.fxpgadmin.tools.RestoreDialog;
 import com.fxpgadmin.tools.ServerStatusWindow;
+import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -29,6 +30,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Separator;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputDialog;
@@ -36,6 +38,8 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -156,13 +160,17 @@ public class MainWindow {
     }
 
     private ToolBar buildToolBar() {
-        Button add = new Button("Add Server");
+        Button add = Icons.toolButton(new Button("Add Server"), "connect",
+                "Add a connection to a server.");
         add.setOnAction(e -> addServer());
-        Button refresh = new Button("Refresh");
+        Button refresh = Icons.toolButton(new Button("Refresh"), "refresh",
+                "Refresh the selected object.");
         refresh.setOnAction(e -> refreshSelected());
-        Button query = new Button("Query Tool");
+        Button query = Icons.toolButton(new Button("Query Tool"), "sql-32",
+                "Execute arbitrary SQL queries.");
         query.setOnAction(e -> openQueryTool(null));
-        Button viewData = new Button("View Data");
+        Button viewData = Icons.toolButton(new Button("View Data"), "viewdata",
+                "View the data in the selected object.");
         viewData.setOnAction(e -> {
             TreeNodeData d = selectedData();
             ServerSession s = selectedSession();
@@ -170,12 +178,13 @@ public class MainWindow {
                 new DataEditorWindow(s, d.object).show();
             }
         });
-        Button status = new Button("Server Status");
+        Button status = Icons.toolButton(new Button("Server Status"), "statistics",
+                "Displays the current database status.");
         status.setOnAction(e -> {
             ServerSession s = selectedSession();
             if (s != null) new ServerStatusWindow(s).show();
         });
-        return new ToolBar(add, refresh, query, viewData, status);
+        return new ToolBar(add, refresh, new Separator(), query, viewData, status);
     }
 
     private static boolean isRelation(DbObject o) {
@@ -544,10 +553,20 @@ public class MainWindow {
             super.updateItem(data, empty);
             if (empty || data == null) {
                 setText(null);
+                setGraphic(null);          // recycled cells must not keep a stale icon
                 setContextMenu(null);
                 return;
             }
             setText(data.label);
+            Image img = Icons.image(TreeIcons.iconName(data));
+            if (img == null) {
+                setGraphic(null);
+            } else {
+                ImageView iv = new ImageView(img);
+                iv.setFitWidth(16);
+                iv.setFitHeight(16);
+                setGraphic(iv);
+            }
             setContextMenu(buildContextMenu(getTreeItem()));
         }
     }
