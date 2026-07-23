@@ -96,6 +96,7 @@ public class MainWindow {
         Scene scene = new Scene(root, 1280, 800);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         stage.setScene(scene);
+        stage.setOnCloseRequest(e -> { if (!confirmExit()) e.consume(); });
         stage.setOnHidden(e -> shutdown());
         stage.show();
     }
@@ -117,7 +118,7 @@ public class MainWindow {
         MenuItem refresh = new MenuItem("Refresh");
         refresh.setOnAction(e -> refreshSelected());
         MenuItem exit = new MenuItem("Exit");
-        exit.setOnAction(e -> stage.close());
+        exit.setOnAction(e -> { if (confirmExit()) stage.close(); });
         file.getItems().addAll(addServer, refresh, new SeparatorMenuItem(), exit);
 
         Menu tools = new Menu("Tools");
@@ -736,6 +737,22 @@ public class MainWindow {
         MenuItem mi = new MenuItem(label);
         mi.setOnAction(e -> r.run());
         return mi;
+    }
+
+    /**
+     * Sweeps open Query Tool windows for unsaved changes before the app exits.
+     * {@code Platform.exit()} (invoked from {@link #shutdown()}) hides every stage
+     * without firing its {@code onCloseRequest}, so this must run before either main-window
+     * close path ({@code onCloseRequest} / File -> Exit) reaches {@code shutdown()}.
+     *
+     * @return true if the application may terminate; false if the user cancelled.
+     */
+    private boolean confirmExit() {
+        for (QueryToolWindow qt : QueryToolWindow.openWindows()) {
+            qt.bringToFront();
+            if (!qt.confirmClose()) return false;
+        }
+        return true;
     }
 
     private void shutdown() {

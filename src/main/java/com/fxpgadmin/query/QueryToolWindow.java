@@ -41,6 +41,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -53,6 +55,14 @@ public class QueryToolWindow {
     private static final int TAB_DATA_OUTPUT = 0;
     private static final int TAB_EXPLAIN = 1;
     private static final int TAB_MESSAGES = 2;
+
+    /** Open windows, FX-thread only (created/removed only on the FX thread). */
+    private static final List<QueryToolWindow> OPEN = new LinkedList<>();
+
+    /** Snapshot of currently-open Query Tool windows, for the app-exit save sweep. */
+    public static List<QueryToolWindow> openWindows() {
+        return List.copyOf(OPEN);
+    }
 
     private final ServerSession session;
     private final String database;
@@ -86,6 +96,7 @@ public class QueryToolWindow {
     }
 
     public void show() {
+        OPEN.add(this);
         stage = new Stage();
         stage.setTitle("Query - " + session.getServer().getName() + " - " + database);
         stage.getIcons().addAll(Icons.stageIcons("sql"));
@@ -130,7 +141,10 @@ public class QueryToolWindow {
                 () -> runExplain(true));
         stage.setScene(scene);
         stage.setOnCloseRequest(e -> { if (!confirmClose()) e.consume(); });
-        stage.setOnHidden(e -> { if (conn != null) conn.close(); });
+        stage.setOnHidden(e -> {
+            OPEN.remove(this);
+            if (conn != null) conn.close();
+        });
         statusConn.setText(session.getServer().getUsername() + "@" + session.getServer().getHost()
                 + ":" + session.getServer().getPort() + "/" + database);
         stage.show();
@@ -371,14 +385,15 @@ public class QueryToolWindow {
     }
 
     /**
-     * Yes/No/Cancel gate shared by window-close and Open-over-dirty-buffer. Cancel/Esc
-     * return false (caller must abort). Any future "Close" menu item/accelerator must
-     * call {@code if (confirmClose()) stage.close();} rather than {@code stage.close()}
+     * Yes/No/Cancel gate shared by window-close, Open-over-dirty-buffer, and the
+     * app-exit sweep in {@code MainWindow.confirmExit()}. Cancel/Esc return false
+     * (caller must abort). Any future "Close" menu item/accelerator must call
+     * {@code if (confirmClose()) stage.close();} rather than {@code stage.close()}
      * directly, since {@code onCloseRequest} only fires for external close requests.
      *
      * @return true if the caller may proceed (discard, or successfully saved)
      */
-    private boolean confirmClose() {
+    public boolean confirmClose() {
         if (!hasUnsavedChanges()) return true;
         return switch (UiUtil.confirmYesNoCancel(stage, "Query",
                 "The text in the query window has changed.\nDo you want to save changes?")) {
@@ -386,6 +401,14 @@ public class QueryToolWindow {
             case NO -> true;
             case CANCEL -> false;
         };
+    }
+
+    /** Brings this window to the foreground so a save prompt has visible context. */
+    public void bringToFront() {
+        if (stage != null) {
+            stage.toFront();
+            stage.requestFocus();
+        }
     }
 
     private void openFile() {
