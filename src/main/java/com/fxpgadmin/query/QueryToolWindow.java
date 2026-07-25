@@ -6,6 +6,7 @@ import com.fxpgadmin.query.explain.ExplainCanvas;
 import com.fxpgadmin.query.explain.ExplainJsonParser;
 import com.fxpgadmin.query.explain.ExplainResult;
 import com.fxpgadmin.query.explain.ExplainTextRenderer;
+import com.fxpgadmin.ui.ScratchPadPane;
 import com.fxpgadmin.util.CsvExporter;
 import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
@@ -14,9 +15,16 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Separator;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
@@ -27,6 +35,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -79,6 +88,9 @@ public class QueryToolWindow {
     private final TabPane outputTabs = new TabPane();
 
     private final AtomicReference<Statement> running = new AtomicReference<>();
+    private final ScratchPadPane scratchPad = new ScratchPadPane();
+    private final CheckMenuItem scratchViewItem = new CheckMenuItem("Scratch pad");
+    private final CheckMenuItem scratchCtxItem = new CheckMenuItem("Scratch pad");
     private Button executeBtn, cancelBtn;
     private Stage stage;
     private String savedText = "";
@@ -108,6 +120,7 @@ public class QueryToolWindow {
         if (!editor.getText().isEmpty()) {
             editor.setStyleSpans(0, SqlHighlighter.computeHighlighting(editor.getText()));
         }
+        editor.setContextMenu(buildEditorContextMenu());
 
         messages.setEditable(false);
         messages.setStyle("-fx-font-family: 'monospace';");
@@ -124,13 +137,17 @@ public class QueryToolWindow {
                 closableFalse(new Tab("Messages", messages)),
                 closableFalse(new Tab("History", history)));
 
-        javafx.scene.control.SplitPane split = new javafx.scene.control.SplitPane(
-                new VirtualizedScrollPane<>(editor), outputTabs);
-        split.setOrientation(Orientation.VERTICAL);
-        split.setDividerPositions(0.45);
+        SplitPane editorSplit = new SplitPane(new VirtualizedScrollPane<>(editor), outputTabs);
+        editorSplit.setOrientation(Orientation.VERTICAL);
+        editorSplit.setDividerPositions(0.45);
 
-        BorderPane root = new BorderPane(split);
-        root.setTop(buildToolbar());
+        SplitPane mainSplit = new SplitPane(editorSplit);      // HORIZONTAL is the default
+        scratchPad.installIn(mainSplit, 0.75);                 // ~250 px of a 1000 px window
+        scratchViewItem.selectedProperty().bindBidirectional(scratchPad.shownProperty());
+        scratchCtxItem.selectedProperty().bindBidirectional(scratchPad.shownProperty());
+
+        BorderPane root = new BorderPane(mainSplit);
+        root.setTop(new VBox(buildMenuBar(), buildToolbar()));
         root.setBottom(buildStatusBar());
 
         Scene scene = new Scene(root, 1000, 700);
@@ -152,6 +169,24 @@ public class QueryToolWindow {
     }
 
     private static Tab closableFalse(Tab t) { t.setClosable(false); return t; }
+
+    private MenuBar buildMenuBar() {
+        scratchViewItem.setAccelerator(new KeyCodeCombination(
+                KeyCode.S, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN));
+        Menu view = new Menu("View");
+        view.getItems().add(scratchViewItem);
+        return new MenuBar(view);           // in-window, like MainWindow; no useSystemMenuBar
+    }
+
+    private ContextMenu buildEditorContextMenu() {
+        MenuItem cut = new MenuItem("Cut");            cut.setOnAction(e -> editor.cut());
+        MenuItem copy = new MenuItem("Copy");          copy.setOnAction(e -> editor.copy());
+        MenuItem paste = new MenuItem("Paste");        paste.setOnAction(e -> editor.paste());
+        MenuItem clear = new MenuItem("Clear");        clear.setOnAction(e -> editor.clear());
+        MenuItem all = new MenuItem("Select All");     all.setOnAction(e -> editor.selectAll());
+        return new ContextMenu(cut, copy, paste, new SeparatorMenuItem(),
+                               clear, all, new SeparatorMenuItem(), scratchCtxItem);
+    }
 
     private ToolBar buildToolbar() {
         Button open = Icons.toolButton(new Button("Open"), "file_open", "Open file.");

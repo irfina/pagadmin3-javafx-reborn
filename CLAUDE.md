@@ -20,7 +20,8 @@ packaging/macos/build-app.sh   # optional: local unsigned macOS .app (jpackage, 
 
 - `mvn test` runs the JUnit 5 suite under `src/test/java`: pure-logic unit tests
   (`quoteIdent`/`quoteLiteral`, the EXPLAIN parse→layout→render pipeline over the fixtures)
-  plus a headless `CodeArea` construction smoke test. It needs no DB and no display.
+  plus headless-FX tests (a `CodeArea` construction smoke test; `ScratchPadPaneTest` for the
+  scratch pad's show/hide/divider-memory logic). It needs no DB and no display.
   Broader verification (real-server tree-walk, live EXPLAIN) stays the opt-in harness
   described below.
 - **JavaFX version is pinned to 26 on purpose**: JavaFX 26 requires JDK 24+ class
@@ -112,9 +113,12 @@ is JavaFX classpath/native-access warnings.
 Headless FX *is* now possible: JavaFX 26 bundles a headless glass platform (JDK-8324941),
 enabled with `-Dglass.platform=headless` — no Monocle, no Xvfb. The Surefire config passes
 that property, so FX-touching unit tests (e.g. the `CodeArea` construction guard for the
-RichTextFX trap above) run under `mvn test` with no display. It's still a POC, so full
-`MainWindow` launch headless is unproven — verify empirically before relying on it for
-whole-app smoke.
+RichTextFX trap above) run under `mvn test` with no display. Control-graph logic works there
+too, without a `Scene` or a shown `Stage`: `ScratchPadPaneTest` mutates a `SplitPane`'s items
+and reads back divider positions headlessly. It's still a POC, so full `MainWindow` launch
+headless is unproven — verify empirically before relying on it for whole-app smoke. Anything
+that needs real layout, focus, menus or input still has to be checked by hand in a launched
+app (plan-07's §7 checklist is the pattern).
 
 **Graphical EXPLAIN** (`query/explain/*`) has its own non-GUI harness pattern, independent of
 the tree-walk harness above: fixture JSON files under `src/test-fixtures/explain/*.json`

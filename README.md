@@ -6,7 +6,7 @@ A desktop PostgreSQL administration tool — a JavaFX re-implementation of the l
 - Java 24, JavaFX 26, Maven
 - Object browser with the full pgAdmin III tree (servers → databases → schemas → tables → …)
 - Properties / Statistics / Dependencies / Dependents tabs + SQL (DDL) pane
-- Query Tool with syntax highlighting, EXPLAIN, cancel, history, CSV export
+- Query Tool with syntax highlighting, EXPLAIN, cancel, history, CSV export, scratch pad
 - Edit Data grid with key-based updates, insert/delete, filter/sort
 - Backup / Restore (pg_dump / pg_restore), Maintenance (VACUUM/ANALYZE/REINDEX/CLUSTER)
 - Server Status (activity, locks, prepared transactions), Grant Wizard

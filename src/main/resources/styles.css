@@ -88,3 +88,10 @@
     -fx-font-size: 9px;
     -fx-fill: #666666;
 }
+
+/* Query Tool scratch pad */
+.scratch-pad-header  { -fx-background-color: #e8e8e8; -fx-border-color: transparent transparent #c8c8c8 transparent; }
+.scratch-pad-caption { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #333333; }
+.scratch-pad-close   { -fx-padding: 0 4 0 4; -fx-background-color: transparent; -fx-font-size: 10px; }
+.scratch-pad-close:hover { -fx-background-color: #d0d0d0; }
+.scratch-pad         { -fx-font-family: "Menlo", "Consolas", "monospace"; -fx-font-size: 12px; }

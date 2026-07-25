@@ -1,6 +1,9 @@
 # Plan 07 — Scratch Pad panel in the Query Tool
 
-**Status: planned.** Design + implementation plan for
+**Status: implemented and verified.** All six tasks in §6 are done and the §7 manual
+checklist (rows 1–20) was walked against a live server and passed in full; see
+[plan-07-query-scratch-pad-SUMMARY.md](plan-07-query-scratch-pad-SUMMARY.md).
+Design + implementation plan for
 [issue #3](https://github.com/irfina/pagadmin3-javafx-reborn/issues/3) — add pgAdmin III's
 "Scratch pad" to the Query Tool: a plain-text side panel next to the SQL editor for
 free-form notes and SQL snippets that are never executed, never saved, and never part of
@@ -297,17 +300,17 @@ not paper over it with a sleep or a fixed pixel width.
 Work top to bottom; each task is self-contained and compiles.
 
 ### Task 1 — New component `src/main/java/com/fxpgadmin/ui/ScratchPadPane.java`
-- [ ] Create the class exactly as sketched in §5.6 (package `com.fxpgadmin.ui`).
-- [ ] Imports: `javafx.beans.property.{BooleanProperty,SimpleBooleanProperty}`,
+- [x] Create the class exactly as sketched in §5.6 (package `com.fxpgadmin.ui`).
+- [x] Imports: `javafx.beans.property.{BooleanProperty,SimpleBooleanProperty}`,
       `javafx.geometry.{Insets,Pos}`,
       `javafx.scene.control.{Button,Label,SplitPane,TextArea,Tooltip}`,
       `javafx.scene.layout.{BorderPane,HBox,Priority,Region}`.
-- [ ] Javadoc must state: plain text, not executed, not persisted, not part of
+- [x] Javadoc must state: plain text, not executed, not persisted, not part of
       unsaved-changes tracking; cite `frmQuery.cpp:545/551` as the origin.
-- [ ] `mvn -q compile`.
+- [x] `mvn -q compile`.
 
 ### Task 2 — Styling in `src/main/resources/styles.css`
-- [ ] Append a "Query Tool scratch pad" section:
+- [x] Append a "Query Tool scratch pad" section:
   ```css
   .scratch-pad-header  { -fx-background-color: #e8e8e8; -fx-border-color: transparent transparent #c8c8c8 transparent; }
   .scratch-pad-caption { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #333333; }
@@ -315,14 +318,14 @@ Work top to bottom; each task is self-contained and compiles.
   .scratch-pad-close:hover { -fx-background-color: #d0d0d0; }
   .scratch-pad         { -fx-font-family: "Menlo", "Consolas", "monospace"; -fx-font-size: 12px; }
   ```
-- [ ] Keep it below the existing `.sql-editor` block; do not touch other rules.
+- [x] Keep it below the existing `.sql-editor` block; do not touch other rules.
 
 ### Task 3 — Wire the pad into `query/QueryToolWindow.java`
-- [ ] Add fields next to the other UI fields (~line 79):
+- [x] Add fields next to the other UI fields (~line 79):
       `private final ScratchPadPane scratchPad = new ScratchPadPane();`
       `private final CheckMenuItem scratchViewItem = new CheckMenuItem("Scratch pad");`
       `private final CheckMenuItem scratchCtxItem = new CheckMenuItem("Scratch pad");`
-- [ ] In `show()`, keep the existing vertical split but give it a name, and wrap it:
+- [x] In `show()`, keep the existing vertical split but give it a name, and wrap it:
   ```java
   SplitPane editorSplit = new SplitPane(new VirtualizedScrollPane<>(editor), outputTabs);
   editorSplit.setOrientation(Orientation.VERTICAL);
@@ -335,12 +338,12 @@ Work top to bottom; each task is self-contained and compiles.
   root.setTop(new VBox(buildMenuBar(), buildToolbar()));  // was: root.setTop(buildToolbar())
   root.setBottom(buildStatusBar());
   ```
-- [ ] Bind both check items to the single source of truth, right after `installIn`:
+- [x] Bind both check items to the single source of truth, right after `installIn`:
   ```java
   scratchViewItem.selectedProperty().bindBidirectional(scratchPad.shownProperty());
   scratchCtxItem.selectedProperty().bindBidirectional(scratchPad.shownProperty());
   ```
-- [ ] Add `private MenuBar buildMenuBar()`:
+- [x] Add `private MenuBar buildMenuBar()`:
   ```java
   private MenuBar buildMenuBar() {
       scratchViewItem.setAccelerator(new KeyCodeCombination(
@@ -350,7 +353,7 @@ Work top to bottom; each task is self-contained and compiles.
       return new MenuBar(view);           // in-window, like MainWindow; no useSystemMenuBar
   }
   ```
-- [ ] Add the editor context menu and install it in `show()` (after the editor styling block):
+- [x] Add the editor context menu and install it in `show()` (after the editor styling block):
   ```java
   private ContextMenu buildEditorContextMenu() {
       MenuItem cut = new MenuItem("Cut");            cut.setOnAction(e -> editor.cut());
@@ -364,45 +367,45 @@ Work top to bottom; each task is self-contained and compiles.
   // in show():
   editor.setContextMenu(buildEditorContextMenu());
   ```
-- [ ] New imports: `com.fxpgadmin.ui.ScratchPadPane`, `javafx.scene.control.{CheckMenuItem,
+- [x] New imports: `com.fxpgadmin.ui.ScratchPadPane`, `javafx.scene.control.{CheckMenuItem,
       ContextMenu,Menu,MenuBar,MenuItem,SeparatorMenuItem,SplitPane}`,
       `javafx.scene.layout.VBox`. (`SplitPane` is currently referenced fully-qualified at
       line 127 — either import it or keep the qualified form consistently.)
-- [ ] **Do not touch** `sqlToRun`, `hasUnsavedChanges`, `confirmClose`, `saveFile`,
+- [x] **Do not touch** `sqlToRun`, `hasUnsavedChanges`, `confirmClose`, `saveFile`,
       `openFile`, `runSql`, `runExplain`, `executeToFile`, or `savedText` — §5.3.
-- [ ] `mvn -q compile`.
+- [x] `mvn -q compile`.
 
 ### Task 4 — Headless unit test `src/test/java/com/fxpgadmin/ui/ScratchPadPaneTest.java`
-- [ ] Model it on
+- [x] Model it on
       [`CodeAreaHeadlessSmokeTest`](../../src/test/java/com/fxpgadmin/ui/CodeAreaHeadlessSmokeTest.java)
       (same `Platform.startup` / `CountDownLatch` / `IllegalStateException` fallback shape —
       Surefire already passes `-Dglass.platform=headless`).
-- [ ] Assert, all on the FX thread:
+- [x] Assert, all on the FX thread:
   1. after `installIn(split, 0.75)` with `shown == false`, `split.getItems()` does **not**
      contain the pane (default hidden);
   2. `shown.set(true)` → the pane is the second item;
   3. `split.setDividerPositions(0.6)`, then `shown.set(false)` → pane removed;
   4. `shown.set(true)` again → pane back, divider ≈ 0.6 (remembered width);
   5. text typed into `textArea()` survives a hide/show round trip.
-- [ ] If assertion 4's divider value proves unreliable without a real layout pass, drop that
+- [x] If assertion 4's divider value proves unreliable without a real layout pass, drop that
       one assertion and note why in a comment — **do not** add sleeps or a fake `Scene` just
       to make it pass.
-- [ ] `mvn test` — the whole suite green.
+- [x] `mvn test` — the whole suite green.
 
 ### Task 5 — Docs
-- [ ] `docs/SUMMARY.md`, "Query Tool (frmQuery)" section: add
+- [x] `docs/SUMMARY.md`, "Query Tool (frmQuery)" section: add
       `- ✅ **Scratch pad** — plain-text side panel (View > Scratch pad, Ctrl+Alt+S, or the
       editor's right-click menu); per-window, in-memory, never executed or saved`.
-- [ ] `docs/migration-design.md`: if it enumerates frmQuery panes/menus, add the pad and note
+- [x] `docs/migration-design.md`: if it enumerates frmQuery panes/menus, add the pad and note
       the two deliberate divergences from 1.22 (hidden by default; visibility not persisted).
-- [ ] Note in this plan's eventual `-SUMMARY.md` that the issue text's "right-click toggle",
+- [x] Note in this plan's eventual `-SUMMARY.md` that the issue text's "right-click toggle",
       "multiple instances" and "visibility not persisted in III" claims were corrected
       against the 1.22.2 source (§1.1).
 
 ### Task 6 — Build + manual verification
-- [ ] `mvn package`, then
+- [x] `mvn package`, then
       `java -jar target/pgadmin3-javafx-reborn-1.0.0.jar > /tmp/app.log 2>&1 &`
-- [ ] Walk the §7 checklist. `/tmp/app.log` must contain nothing beyond the usual JavaFX
+- [x] Walk the §7 checklist. `/tmp/app.log` must contain nothing beyond the usual JavaFX
       classpath / native-access warnings.
 
 ## 7. Verification

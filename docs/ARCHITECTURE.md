@@ -62,7 +62,8 @@ com.fxpgadmin
 │                               script generation)
 ├── ui                        – MainWindow (menus, toolbar, browser tree, context menus,
 │                               drop/rename/truncate/count actions), DetailPane
-│                               (Properties / Statistics / Dependencies / Dependents / SQL pane)
+│                               (Properties / Statistics / Dependencies / Dependents / SQL pane),
+│                               ScratchPadPane (reusable hide/show side panel)
 ├── query                     – QueryToolWindow, SqlHighlighter, ResultTable
 ├── data                      – DataEditorWindow (editable grid)
 ├── tools                     – BackupDialog, RestoreDialog, ProcessDialog (external tool
@@ -138,6 +139,17 @@ tooltips, a click-to-open modeless property grid (reusing `DetailPane.KV`), zoom
 clipboard export via `SwingFXUtils`. The "Explain" tab sits between Data Output and Messages in
 `QueryToolWindow`'s `outputTabs`.
 
+The window's **scratch pad** (pgAdmin III's AUI-docked `wxTextCtrl`, `frmQuery.cpp:545`) is
+`ui/ScratchPadPane` — a plain `TextArea` with a caption/✕ header, hosted as the second item of a
+horizontal `SplitPane` that wraps the editor/output split. JavaFX has no docking framework, so
+show/hide is implemented as **add/remove from the split's items** (a merely invisible item would
+still hold a divider and layout space), stashing the divider position in between so a re-show
+restores the width the user dragged to. A single `BooleanProperty shown` on the pane is the one
+source of truth: the `View` menu's `CheckMenuItem` (Ctrl+Alt+S / Cmd+Alt+S), the matching item on
+the SQL editor's new right-click menu, and the pane's own ✕ all bind to it rather than to each
+other. The pad is deliberately inert — nothing reads it, so it can never reach `sqlToRun()`,
+the save/open paths, or the plan-02/plan-06 unsaved-changes tracking.
+
 ### Data editing
 
 `DataEditorWindow` reads the primary key from `pg_index`; edits become
@@ -175,6 +187,11 @@ Backup/Restore require the PostgreSQL client tools (`pg_dump`, `pg_restore`) on 
 - Object *property-edit* dialogs exist for servers, databases, schemas and roles; other object
   types are created/altered through generated SQL templates opened in the Query Tool (pgAdmin III
   had dedicated dialogs for each type).
+- The Query Tool's scratch pad starts **hidden** (pgAdmin III's default perspective shipped it
+  visible), and its shown/hidden state and width are per-window and in-memory only — pgAdmin III
+  persisted the whole AUI perspective to its settings store, which has no equivalent here yet.
+  Panes are also fixed in place: a `SplitPane` gives hide/show and resize, but no floating or
+  re-docking.
 - Slony-I replication support, the pgAgent job manager, and pgScript are not implemented
   (deprecated ecosystem components with no modern equivalent).
 - The debugger plugin (PL/pgSQL debugger) is not implemented.

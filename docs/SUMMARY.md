@@ -61,6 +61,8 @@ the legacy application's feature set.
 - ✅ Data Output grid, Messages pane, Query History (double-click to recall)
 - ✅ Open / Save `.sql` files; rows + elapsed-time status bar; dedicated connection per window,
   auto-reconnect
+- ✅ **Scratch pad** — plain-text side panel (View > Scratch pad, Ctrl+Alt+S, or the
+  editor's right-click menu); per-window, in-memory, never executed or saved
 
 ### Edit Data (frmEditGrid)
 - ✅ Grid view of tables/views with max-rows selector (100/500/1000/all)

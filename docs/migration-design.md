@@ -155,6 +155,14 @@ which replaces pgAdmin III's hand-rolled catalog joins for naming referenced obj
 - History keeps timestamped statements, double-click recalls (pgAdmin III's history tab).
 - Scintilla lexing replaced by a regex `Pattern` over keywords/strings/comments/numbers/
   quoted identifiers, styled via CSS classes in `styles.css`.
+- **Scratch pad** (`frmQuery.cpp:545`, an AUI-docked `wxTextCtrl`) ports as a plain
+  `TextArea` in a `ui/ScratchPadPane`, hidden/shown by adding/removing it from a horizontal
+  `SplitPane` next to the existing editor/output split, toggled from a `View` menu
+  (Ctrl+Alt+S) and the editor's new right-click context menu. Two deliberate divergences
+  from 1.22: it starts **hidden** (III's default perspective shipped it visible), and its
+  shown/hidden state and divider width are **per-window, in-memory only** — III persisted
+  the whole AUI perspective to disk, which this app does not have a preferences store for
+  yet. See `docs/plan/plan-07-query-scratch-pad.md` for the full design.
 
 ### 5.7 Edit grid (`frmEditGrid`)
 - Primary key columns read from `pg_index (indisprimary)`; without a PK — or for views —
