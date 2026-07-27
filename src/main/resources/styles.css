@@ -37,6 +37,40 @@
     -fx-highlight-fill: -app-editor-selection;
 }
 
+/* Everything SqlHighlighter does *not* classify — table names, column names, aliases,
+   operators, punctuation — gets an empty style span, so its Text node carries only the
+   `text` class. Without a rule here it falls through to JavaFX's default Color.BLACK,
+   which is 1.27:1 on the dark editor background. See plan-08a §3.1. */
+.styled-text-area .text {
+    -fx-fill: -app-editor-text;
+}
+
+/* The token rules must out-specify the default above: `.styled-text-area .text.sql-*`
+   is three selectors against its two. Written as bare `.sql-*` they LOSE, and every
+   token silently renders in the body colour. EditorTextFillTest is the guard. */
+.styled-text-area .text.sql-keyword {
+    -fx-fill: -app-sql-keyword;
+    -fx-font-weight: bold;
+}
+
+.styled-text-area .text.sql-string {
+    -fx-fill: -app-sql-string;
+}
+
+.styled-text-area .text.sql-comment {
+    -fx-fill: -app-sql-comment;
+    -fx-font-style: italic;
+}
+
+.styled-text-area .text.sql-number {
+    -fx-fill: -app-sql-number;
+}
+
+.styled-text-area .text.sql-ident {
+    -fx-fill: -app-sql-ident;
+}
+
+/* Kept so the token classes still colour anything outside a StyledTextArea. */
 .sql-keyword {
     -fx-fill: -app-sql-keyword;
     -fx-font-weight: bold;
@@ -62,6 +96,18 @@
 .lineno {
     -fx-background-color: -app-lineno-bg;
     -fx-text-fill: -app-lineno-text;
+}
+
+/* Checked marks on menu items (View > Theme, the Query Tool's Scratch pad toggle).
+   Modena paints these with -fx-mark-color, a ladder() over -fx-base, so the mark is only
+   as correct as the -fx-base that reaches the popup — and a popup's scene is not the
+   owner's. Stating the colour outright makes it independent of that resolution.
+   The :focused (hovered) rules are deliberately NOT overridden: hovering already reads
+   correctly in both themes, and leaving them alone keeps light's focused look untouched.
+   See plan-08a §3.2(a). */
+.radio-menu-item:checked > .left-container > .radio,
+.check-menu-item:checked > .left-container > .check {
+    -fx-background-color: -app-menu-mark;
 }
 
 /* Graphical EXPLAIN (Query Tool "Explain" tab) */

@@ -17,6 +17,9 @@
 
     /* RichTextFX editor chrome */
     -app-editor-bg: white;
+    /* Reproduces exactly what unclassified editor text got implicitly before plan-08a:
+       JavaFX's Text default fill, Color.BLACK. */
+    -app-editor-text: black;
     -app-editor-caret: black;
     -app-editor-selection: dodgerblue;
     -app-lineno-bg: #f0f0f0;
@@ -36,6 +39,13 @@
     -app-explain-glyph-stroke: #2b4a6f;
     -app-explain-glyph-fill: #dbe7f5;
     -app-explain-glyph-accent: #4a78ab;
+
+    /* Menus. -app-menu-mark is the value Modena's -fx-mark-color ladder already computes
+       here (measured), so light is unchanged. -app-menu-bg is not consumed by styles.css:
+       it records the surface a mark actually lands on — Modena's -fx-control-inner-background,
+       the inner fill of .context-menu — so ThemeContrastTest can audit the pair. */
+    -app-menu-mark: #575757;
+    -app-menu-bg: white;
 
     /* Panel headers (Query Tool scratch pad, and any future side panel) */
     -app-panel-header-bg: #e8e8e8;

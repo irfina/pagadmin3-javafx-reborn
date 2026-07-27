@@ -4,7 +4,10 @@ import com.fxpgadmin.model.AppPreferences;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.layout.Region;
+import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -139,6 +142,93 @@ class ThemeManagerTest {
         assertTrue(done.await(30, TimeUnit.SECONDS), "FX toolkit never ran the task");
         Throwable t = error.get();
         if (t != null) fail("Theme persistence/dialog theming behaved unexpectedly: " + t, t);
+    }
+
+    /**
+     * plan-08a §3.2(b) — popups, the one window kind no call site can route through
+     * {@code apply}, since their scene is built by the control skin.
+     *
+     * <p>Two distinct facts, asserted separately because only the second is ours:
+     * <ul>
+     *   <li><b>On open</b> the popup already carries the right sheets. That is JavaFX's own
+     *       doing — it copies the owner scene's stylesheet list at {@code show()} time
+     *       (measured for a Stage-owned popup and for a popup-owned popup alike). Asserting
+     *       it pins the behaviour {@code ThemeManager} is entitled to rely on.</li>
+     *   <li><b>Across a switch</b> the popup must follow. That copy is a snapshot, so this
+     *       only holds because {@code restyleAll()} sweeps the live window list. Remove the
+     *       sweep and this half fails while the first half still passes.</li>
+     * </ul>
+     */
+    @Test
+    void popupWindowsAreThemedAsTheyOpenAndFollowASwitch(@TempDir Path dir) throws InterruptedException {
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        CountDownLatch done = new CountDownLatch(1);
+
+        Runnable body = () -> {
+            Stage owner = null;
+            ContextMenu menu = null;
+            ContextMenu sub = null;
+            try {
+                // This is the only test that shows a Stage. Hiding the last window would
+                // otherwise trigger JavaFX's implicit exit and shut the toolkit down for
+                // every FX test that runs after this one in the same JVM.
+                Platform.setImplicitExit(false);
+
+                ThemeManager.init(new AppPreferences(dir.toFile()));
+                ThemeManager.setSelected(Theme.DARK);
+
+                owner = new Stage();
+                owner.setScene(new Scene(new Region(), 300, 200));
+                ThemeManager.apply(owner.getScene());
+                owner.show();
+
+                menu = new ContextMenu(new RadioMenuItem("Dark"));
+                menu.show(owner, 10, 10);
+
+                // A popup owned by the popup — the View > Theme submenu shape, the case
+                // plan-08a §2.2 could not separate without a display.
+                sub = new ContextMenu(new RadioMenuItem("Light"));
+                sub.show(menu, 20, 20);
+
+                for (var each : List.of(
+                        java.util.Map.entry("popup", menu.getScene()),
+                        java.util.Map.entry("submenu", sub.getScene()))) {
+                    Scene s = each.getValue();
+                    assertNotNull(s, each.getKey() + " should own a scene once shown");
+                    assertEquals(2, s.getStylesheets().size(),
+                            "an opened " + each.getKey() + " must carry [base, theme]: "
+                                    + s.getStylesheets());
+                    assertTrue(s.getStylesheets().get(1).endsWith("theme-dark.css"),
+                            each.getKey() + " opened in the wrong theme: " + s.getStylesheets());
+                }
+
+                // The inherited list is a snapshot: without restyleAll()'s window sweep, a
+                // popup left open across a switch keeps the sheet it opened with.
+                ThemeManager.setSelected(Theme.LIGHT);
+                for (var each : List.of(
+                        java.util.Map.entry("popup", menu.getScene()),
+                        java.util.Map.entry("submenu", sub.getScene()))) {
+                    assertTrue(each.getValue().getStylesheets().get(1).endsWith("theme-light.css"),
+                            "an open " + each.getKey() + " did not follow the switch: "
+                                    + each.getValue().getStylesheets());
+                }
+            } catch (Throwable t) {
+                error.set(t);
+            } finally {
+                try {
+                    if (sub != null) sub.hide();
+                    if (menu != null) menu.hide();
+                    if (owner != null) owner.hide();
+                } catch (Throwable ignored) { }
+                done.countDown();
+            }
+        };
+
+        startFx(body);
+
+        assertTrue(done.await(30, TimeUnit.SECONDS), "FX toolkit never ran the task");
+        Throwable t = error.get();
+        if (t != null) fail("Popup theming behaved unexpectedly: " + t, t);
     }
 
     /** Start the toolkit; if some earlier test already did, just enqueue onto the FX thread. */

@@ -7,9 +7,11 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
 import javafx.scene.Scene;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
+import javafx.stage.PopupWindow;
 import javafx.stage.Window;
 
 import java.util.ArrayList;
@@ -31,6 +33,12 @@ import java.util.WeakHashMap;
  * by garbage collection: there is no {@code unregister} call for a future window to
  * forget.
  *
+ * <p>{@link PopupWindow}s — context menus, submenus, tooltips, combo popups — are the one
+ * window kind no call site can route through {@code apply}: they are created by control
+ * skins and own scenes of their own. They are picked up automatically instead, by a
+ * listener on {@link Window#getWindows()} that themes each popup as it appears
+ * (plan-08a §3.2(b)).
+ *
  * <p>All methods must be called on the FX thread (they only touch the scene graph and
  * a JSON preferences file — hard rule 1 is untouched).
  */
@@ -51,6 +59,7 @@ public final class ThemeManager {
 
     private static AppPreferences prefs;
     private static boolean systemSchemeHooked;
+    private static boolean popupWatcherHooked;
 
     static {
         // Wired at class-init, not in init(): selected -> effective -> restyle must hold
@@ -62,6 +71,7 @@ public final class ThemeManager {
         });
         effective.addListener((obs, old, now) -> restyleAll());
         hookSystemColorScheme();
+        hookPopupWindows();
         recomputeEffective();
     }
 
@@ -76,9 +86,10 @@ public final class ThemeManager {
      */
     public static void init(AppPreferences preferences) {
         prefs = preferences;
-        // The OS hook may not have taken at class-init (the FX toolkit may not have been
-        // up yet); retry now that we are demonstrably running inside a started app.
+        // The OS and window-list hooks may not have taken at class-init (the FX toolkit may
+        // not have been up yet); retry now that we are demonstrably running inside a started app.
         hookSystemColorScheme();
+        hookPopupWindows();
         selected.set(Theme.parse(preferences == null ? null : preferences.getTheme()));
         recomputeEffective();
     }
@@ -173,14 +184,64 @@ public final class ThemeManager {
         }
     }
 
-    /** Sets a scene's stylesheet list to [base, current theme sheet]. */
-    private static void setSheets(Scene scene) {
+    /**
+     * Themes every {@link PopupWindow} as it opens.
+     *
+     * <p>A popup's scene is created by the control skin, not by us, so no call site can route
+     * it through {@code apply}. Measured (plan-08a §5): JavaFX <em>does</em> copy the owner
+     * scene's stylesheet list into the popup scene at {@code show()} time, for a popup owned
+     * by a Stage <em>and</em> for one owned by another popup (the submenu shape) — so this
+     * listener is defensive rather than load-bearing. What is <em>not</em> covered by that
+     * copy is a later theme switch: the inherited list is a snapshot, and a popup left open
+     * across a switch keeps the old sheet. {@link #restyleAll()} handles that case.
+     *
+     * <p>Popup scenes are deliberately <em>not</em> put in {@link #scenes}: they belong to the
+     * skin and may be discarded and rebuilt at will, so the switch sweeps the live window
+     * list rather than holding references to them.
+     *
+     * <p>Guarded like {@link #hookSystemColorScheme()}: a failure here must never stop a
+     * window from opening.
+     */
+    private static void hookPopupWindows() {
+        if (popupWatcherHooked) return;
+        try {
+            Window.getWindows().addListener((ListChangeListener<Window>) c -> {
+                while (c.next()) {
+                    if (!c.wasAdded()) continue;
+                    for (Window w : c.getAddedSubList()) themePopup(w);
+                }
+            });
+            popupWatcherHooked = true;
+        } catch (Throwable ignored) {
+            // No window list yet (class-init before toolkit startup): init() retries.
+        }
+    }
+
+    private static void themePopup(Window window) {
+        if (!(window instanceof PopupWindow)) return;
+        try {
+            Scene scene = window.getScene();
+            // Usually already correct via JavaFX's own inheritance; skipping the no-op keeps
+            // every tooltip from triggering a pointless CSS reapplication.
+            if (scene != null && !scene.getStylesheets().equals(currentSheets())) setSheets(scene);
+        } catch (Throwable ignored) {
+            // Never let styling a transient popup break the popup.
+        }
+    }
+
+    /** The stylesheet list every themed scene should be carrying right now. */
+    private static List<String> currentSheets() {
         String base = url(BASE_SHEET);
         String theme = url(effective.get() == Theme.DARK ? DARK_SHEET : LIGHT_SHEET);
         List<String> sheets = new ArrayList<>(2);
         if (base != null) sheets.add(base);
         if (theme != null) sheets.add(theme);
-        scene.getStylesheets().setAll(sheets);
+        return sheets;
+    }
+
+    /** Sets a scene's stylesheet list to [base, current theme sheet]. */
+    private static void setSheets(Scene scene) {
+        scene.getStylesheets().setAll(currentSheets());
     }
 
     private static void restyleAll() {
@@ -188,6 +249,13 @@ public final class ThemeManager {
         // the GC may clear entries is asking for a ConcurrentModificationException.
         for (Scene s : new ArrayList<>(scenes)) {
             if (s != null) setSheets(s);
+        }
+        // ...and any popup that happens to be open across the switch (a context menu left
+        // showing, a tooltip). Popups are not registered — see hookPopupWindows().
+        try {
+            for (Window w : new ArrayList<>(Window.getWindows())) themePopup(w);
+        } catch (Throwable ignored) {
+            // No window list (headless/class-init): the registered scenes still restyled.
         }
     }
 

@@ -227,6 +227,10 @@ See `docs/plan/plan-08-dark-light-theme.md` and its `-SUMMARY.md`; the summary r
 the planned pixel transform had to be replaced, and the macOS
 `apple.awt.application.appearance` trap that otherwise makes "System" silently never work.
 
+The tokenization pass caught every colour that was already *written down*, and missed the two
+the app was getting **implicitly** — see §9.5. `docs/plan/plan-08a-dark-mode-legibility-fixes.md`
+is the follow-up that claimed them.
+
 ## 6. Threading model
 
 Single rule, enforced everywhere: **the FX thread never touches JDBC**. Catalog loads,
@@ -294,6 +298,21 @@ These are recorded because each one is a lesson about the C++→Java translation
    `setFixedCellSize(24)` on the data grid and result tables, which switches VirtualFlow
    to exact positioning (also a large-scroll performance win). Trade-off: cells render
    single-line (clipped), like pgAdmin III; stored values are unaffected.
+5. **Two colours the theme audit could not see, because they were never written down.**
+   The dark theme (§5.11) tokenized every colour that was already a literal in `styles.css`
+   — and by construction missed the ones the app was inheriting *implicitly*. Two of those
+   went black-on-near-black once the background inverted: text `SqlHighlighter` does not
+   classify (table names, aliases, punctuation) took JavaFX's `Text` default of
+   `Color.BLACK` — **1.27:1**, effectively invisible on `#1e1f22` — and a checked menu
+   item's tick took Modena's `-fx-mark-color`, a `ladder()` over `-fx-base`. Both are now
+   stated outright (`-app-editor-text`, `-app-menu-mark`). **Rule adopted:** the
+   "no colour literal in `styles.css`" grep proves nothing about colours that are *absent*;
+   when a surface reads correctly in light and wrongly in dark, suspect an inherited default
+   before suspecting the palette. The fix carried its own trap — a default
+   `.styled-text-area .text` rule out-specifies bare `.sql-*` token rules and silently kills
+   all syntax highlighting — so the token rules are written `.styled-text-area .text.sql-*`
+   and `EditorTextFillTest` reads the real `Text` fills back to hold them there. See
+   `docs/plan/plan-08a-dark-mode-legibility-fixes.md` and its `-SUMMARY.md`.
 
 ## 10. Verification strategy
 

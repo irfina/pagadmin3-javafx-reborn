@@ -49,6 +49,7 @@ class ThemeContrastTest {
             new Pair("-app-sql-comment", "-app-editor-bg", AA_TEXT, "SQL comment"),
             new Pair("-app-sql-number", "-app-editor-bg", AA_TEXT, "SQL number"),
             new Pair("-app-sql-ident", "-app-editor-bg", AA_TEXT, "SQL quoted identifier"),
+            new Pair("-app-editor-text", "-app-editor-bg", AA_TEXT, "unclassified editor text"),
             new Pair("-app-lineno-text", "-app-lineno-bg", AA_TEXT, "editor line numbers"),
             new Pair("-app-explain-caption2", "-app-explain-node-bg", AA_TEXT, "plan node cost line"),
             new Pair("-app-explain-connector-label", "-app-explain-canvas-bg", AA_TEXT, "SubPlan label"),
@@ -63,7 +64,8 @@ class ThemeContrastTest {
             new Pair("-app-explain-glyph-stroke", "-app-explain-glyph-fill", AA_GRAPHICS, "glyph outline on its own fill"),
             new Pair("-app-explain-glyph-accent", "-app-explain-node-bg", AA_GRAPHICS, "glyph accent on node"),
             new Pair("-app-explain-glyph-accent", "-app-explain-glyph-fill", AA_GRAPHICS, "glyph accent on its own fill"),
-            new Pair("-app-editor-caret", "-app-editor-bg", AA_GRAPHICS, "editor caret"));
+            new Pair("-app-editor-caret", "-app-editor-bg", AA_GRAPHICS, "editor caret"),
+            new Pair("-app-menu-mark", "-app-menu-bg", AA_GRAPHICS, "checked menu mark"));
 
     @Test
     void darkPaletteMeetsWcagAa() throws IOException {

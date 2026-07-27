@@ -34,6 +34,7 @@
 
     /* ---- RichTextFX editor chrome ---- */
     -app-editor-bg: #1e1f22;
+    -app-editor-text: #d6d8dc;
     -app-editor-caret: #d6d8dc;
     -app-editor-selection: #3f5f8f;
     -app-lineno-bg: #2b2d30;
@@ -53,6 +54,12 @@
     -app-explain-glyph-stroke: #a9c4e0;
     -app-explain-glyph-fill: #3c4a5c;
     -app-explain-glyph-accent: #8fb4dc;
+
+    /* ---- Menus ---- */
+    /* -app-menu-bg is the measured inner fill of .context-menu under this sheet
+       (= -fx-control-inner-background); see theme-light.css for why it exists. */
+    -app-menu-mark: #d6d8dc;
+    -app-menu-bg: #1e1f22;
 
     /* ---- Panel headers (Query Tool scratch pad, and any future side panel) ---- */
     -app-panel-header-bg: #33363a;

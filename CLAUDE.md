@@ -22,9 +22,10 @@ packaging/macos/build-app.sh   # optional: local unsigned macOS .app (jpackage, 
   (`quoteIdent`/`quoteLiteral`, the EXPLAIN parse→layout→render pipeline over the fixtures,
   `AppPreferencesTest`, and `ThemeContrastTest`'s WCAG audit of both theme palettes) plus
   headless-FX tests (a `CodeArea` construction smoke test; `ScratchPadPaneTest` for the
-  scratch pad's show/hide/divider-memory logic; `ThemeManagerTest` for scene/dialog
-  restyling; `IconsThemeTest` for the dark icon set and live toolbar swap). It needs no DB
-  and no display.
+  scratch pad's show/hide/divider-memory logic; `ThemeManagerTest` for scene/dialog/popup
+  restyling; `EditorTextFillTest`, which reads real `Text` fills out of a highlighted
+  `CodeArea` in a themed scene; `IconsThemeTest` for the dark icon set and live toolbar
+  swap). It needs no DB and no display.
   Broader verification (real-server tree-walk, live EXPLAIN) stays the opt-in harness
   described below.
 - **JavaFX version is pinned to 26 on purpose**: JavaFX 26 requires JDK 24+ class
@@ -92,12 +93,25 @@ Touch these, in order:
    restyling. There is no fallback: a missed site renders in bare Modena and looks obviously
    broken in dark mode. Re-grep after adding windows:
    `grep -rn "new Scene\|new Alert\|new Dialog<\|new TextInputDialog\|new ChoiceDialog" src/main/java`.
+   Popups (context menus, submenus, tooltips) need no call site — `ThemeManager` picks them
+   off `Window.getWindows()` and re-sweeps them on a switch, because JavaFX's own
+   owner-stylesheet inheritance is only a snapshot taken at `show()` time.
 8. **No colour literal in `styles.css`** — it holds structure plus `-app-*` looked-up colors
    only; the values live in `theme-light.css` / `theme-dark.css`, which must define the *same*
    token set. `ThemeContrastTest` fails on a one-sided token, an undefined token, or a pair
    below WCAG AA. Colours that cannot be CSS (EXPLAIN glyphs) use `explain-glyph-*` style
    classes, never `Color` constants. Audit with:
    `grep -nE '#[0-9a-fA-F]{3,8}|rgba?\(' src/main/resources/styles.css`.
+9. **A colour you never stated is still a colour.** The grep above only finds literals that
+   are already *in* the sheet; it cannot see what the app inherits from a JavaFX default or a
+   Modena `ladder()` over `-fx-base`. Two such colours were black-on-black in dark mode until
+   plan-08a claimed them (`-app-editor-text` for text `SqlHighlighter` does not classify,
+   `-app-menu-mark` for a checked menu item's tick). When a new surface looks right in light
+   and wrong in dark, suspect an implicit colour before suspecting the palette. Related trap:
+   the SQL token rules must stay written as `.styled-text-area .text.sql-*` — three selectors,
+   so they beat the two-selector `.styled-text-area .text` default. Shortening them to bare
+   `.sql-*` compiles, passes every other test, and silently kills syntax highlighting;
+   `EditorTextFillTest` is the only thing that catches it.
 
 ## Verifying changes against a real server
 

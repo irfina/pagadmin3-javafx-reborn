@@ -192,6 +192,23 @@ set and flips its `ladder()` text rules to light automatically.
    `ThemeContrastTest` fails on a token defined in only one, on an undefined token referenced
    by `styles.css`, and on any palette pair below WCAG AA (4.5:1 text, 3:1 graphics).
 
+`PopupWindow`s — context menus, submenus, tooltips, combo popups — are the one window kind
+no call site can route through `apply`: their scenes are built by control skins. JavaFX
+copies the owner scene's stylesheet list into a popup scene at `show()` time (measured, for
+a Stage-owned popup and for a popup-owned popup alike), but that copy is a **snapshot**, so
+`ThemeManager` additionally sweeps the live `Window.getWindows()` list on every switch and
+carries a defensive window-list listener. Both are guarded: styling a transient popup must
+never stop it from opening.
+
+Two colours reach the screen without ever appearing as a literal anywhere, and both had to be
+claimed explicitly (plan-08a): text the SQL highlighter does not classify — table names,
+aliases, punctuation — which otherwise falls through to JavaFX's `Text` default of black
+(`-app-editor-text`), and a checked menu item's mark, which Modena derives with a `ladder()`
+over `-fx-base` (`-app-menu-mark`). Both were invisible in dark. The token rules for the SQL
+classes are written `.styled-text-area .text.sql-*` so they out-specify the
+`.styled-text-area .text` default; written bare they lose and all syntax highlighting
+silently collapses into the body colour — `EditorTextFillTest` is the guard.
+
 Colours that cannot be CSS (the EXPLAIN glyphs `ExplainIcons` draws as JavaFX shapes) are
 routed through `explain-glyph-*` style classes rather than `Color` constants, so an
 already-rendered diagram restyles on a switch without being rebuilt. The 16×16 PNG icons are

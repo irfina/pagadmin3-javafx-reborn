@@ -66,6 +66,13 @@ toolbar, browser tree, detail tabs, table, SQL pane, status bar). Dark renders c
 from the first frame with the dark icon set; light is unchanged apart from the new View
 menu.
 
+**The user's later walkthrough found two dark-mode legibility defects this pass missed** —
+row 7 (editor body text black on black) and the View > Theme checkmark, which was never on
+the checklist. Both are colours the app inherited *implicitly*, so the "no colour literal in
+`styles.css`" grep could not see them. Fixed by
+[plan-08a](plan-08a-dark-mode-legibility-fixes.md) /
+[its SUMMARY](plan-08a-dark-mode-legibility-fixes-SUMMARY.md).
+
 **Not performed — needs a live server, left for the user:** plan §7 rows 7–9 and 13 (SQL
 syntax colours, caret/selection, the EXPLAIN diagram in dark, live restyle of an open
 diagram, Data Editor grid). The code paths are exercised by unit tests, but their *visual*

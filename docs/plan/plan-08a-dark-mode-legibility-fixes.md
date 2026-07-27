@@ -1,6 +1,8 @@
 # Plan 08a — Dark-mode legibility fixes: editor body text and menu checkmarks
 
-**Status: planned — not yet implemented.**
+**Status: implemented** — see
+[plan-08a-dark-mode-legibility-fixes-SUMMARY.md](plan-08a-dark-mode-legibility-fixes-SUMMARY.md),
+which records what §2.2's open question turned out to be.
 Follow-up to [plan-08](plan-08-dark-light-theme.md) (see its
 [SUMMARY](plan-08-dark-light-theme-SUMMARY.md)), fixing two defects found during the
 plan-08 §7 manual walkthrough.
