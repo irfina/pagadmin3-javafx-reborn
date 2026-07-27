@@ -327,6 +327,7 @@ public class MainWindow {
         String password = info.isSavePassword() ? info.retrievePassword() : null;
         if (password == null || password.isEmpty()) {
             javafx.scene.control.Dialog<String> dlg = new javafx.scene.control.Dialog<>();
+            ThemeManager.apply(dlg);
             dlg.setTitle("Connect to Server");
             dlg.setHeaderText("Password for " + info.getUsername() + "@" + info.getHost());
             javafx.scene.control.PasswordField pf = new javafx.scene.control.PasswordField();

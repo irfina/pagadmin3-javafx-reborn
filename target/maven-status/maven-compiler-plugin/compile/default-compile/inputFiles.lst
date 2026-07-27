@@ -12,6 +12,7 @@
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/dialogs/GrantWizard.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/dialogs/NewObjectDialogs.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/dialogs/ServerDialog.java
+/Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/model/AppPreferences.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/model/ServerInfo.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/model/ServerRegistry.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/query/QueryToolWindow.java
@@ -31,6 +32,9 @@
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/tools/ServerStatusWindow.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/ui/DetailPane.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/ui/MainWindow.java
+/Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/ui/ScratchPadPane.java
+/Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/ui/Theme.java
+/Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/ui/ThemeManager.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/ui/TreeIcons.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/util/CsvExporter.java
 /Users/irfin/swdevelopment/my-pgadmin/src/main/java/com/fxpgadmin/util/Icons.java

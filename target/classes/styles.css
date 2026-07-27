@@ -1,6 +1,18 @@
+/*
+ * Structure only — every colour is a looked-up "-app-*" token defined by one of the
+ * two theme sheets (theme-light.css / theme-dark.css) that ThemeManager pairs with
+ * this file on every Scene. Do not put a colour literal in here: a hex value would
+ * be invisible to the theme switch. See docs/plan/plan-08-dark-light-theme.md §5.2.
+ */
+
 /* pgAdmin III-style icon toolbars */
 .tool-bar .button {
     -fx-padding: 3 5 3 5;
+}
+
+/* Monospace panes that used to carry an inline -fx-font-family setStyle() */
+.mono-text {
+    -fx-font-family: "Menlo", "Consolas", "monospace";
 }
 
 /* Query tool editor */
@@ -9,40 +21,103 @@
     -fx-font-size: 13px;
 }
 
+/* RichTextFX: its defaults assume a light theme, so background/caret/selection
+   have to be stated explicitly for the dark sheet to have anything to override. */
+.styled-text-area {
+    -fx-background-color: -app-editor-bg;
+}
+
+.styled-text-area .caret {
+    -fx-stroke: -app-editor-caret;
+}
+
+/* RichTextFX drives the selection colour through its own -fx-highlight-fill
+   styleable property (SelectionPath), not through Shape's -fx-fill. */
+.styled-text-area .selection {
+    -fx-highlight-fill: -app-editor-selection;
+}
+
+/* Everything SqlHighlighter does *not* classify — table names, column names, aliases,
+   operators, punctuation — gets an empty style span, so its Text node carries only the
+   `text` class. Without a rule here it falls through to JavaFX's default Color.BLACK,
+   which is 1.27:1 on the dark editor background. See plan-08a §3.1. */
+.styled-text-area .text {
+    -fx-fill: -app-editor-text;
+}
+
+/* The token rules must out-specify the default above: `.styled-text-area .text.sql-*`
+   is three selectors against its two. Written as bare `.sql-*` they LOSE, and every
+   token silently renders in the body colour. EditorTextFillTest is the guard. */
+.styled-text-area .text.sql-keyword {
+    -fx-fill: -app-sql-keyword;
+    -fx-font-weight: bold;
+}
+
+.styled-text-area .text.sql-string {
+    -fx-fill: -app-sql-string;
+}
+
+.styled-text-area .text.sql-comment {
+    -fx-fill: -app-sql-comment;
+    -fx-font-style: italic;
+}
+
+.styled-text-area .text.sql-number {
+    -fx-fill: -app-sql-number;
+}
+
+.styled-text-area .text.sql-ident {
+    -fx-fill: -app-sql-ident;
+}
+
+/* Kept so the token classes still colour anything outside a StyledTextArea. */
 .sql-keyword {
-    -fx-fill: #00007f;
+    -fx-fill: -app-sql-keyword;
     -fx-font-weight: bold;
 }
 
 .sql-string {
-    -fx-fill: #7f0000;
+    -fx-fill: -app-sql-string;
 }
 
 .sql-comment {
-    -fx-fill: #007f00;
+    -fx-fill: -app-sql-comment;
     -fx-font-style: italic;
 }
 
 .sql-number {
-    -fx-fill: #7f007f;
+    -fx-fill: -app-sql-number;
 }
 
 .sql-ident {
-    -fx-fill: #3f3f7f;
+    -fx-fill: -app-sql-ident;
 }
 
 .lineno {
-    -fx-background-color: #f0f0f0;
+    -fx-background-color: -app-lineno-bg;
+    -fx-text-fill: -app-lineno-text;
+}
+
+/* Checked marks on menu items (View > Theme, the Query Tool's Scratch pad toggle).
+   Modena paints these with -fx-mark-color, a ladder() over -fx-base, so the mark is only
+   as correct as the -fx-base that reaches the popup — and a popup's scene is not the
+   owner's. Stating the colour outright makes it independent of that resolution.
+   The :focused (hovered) rules are deliberately NOT overridden: hovering already reads
+   correctly in both themes, and leaving them alone keeps light's focused look untouched.
+   See plan-08a §3.2(a). */
+.radio-menu-item:checked > .left-container > .radio,
+.check-menu-item:checked > .left-container > .check {
+    -fx-background-color: -app-menu-mark;
 }
 
 /* Graphical EXPLAIN (Query Tool "Explain" tab) */
 .explain-canvas {
-    -fx-background-color: white;
+    -fx-background-color: -app-explain-canvas-bg;
 }
 
 .explain-node {
-    -fx-background-color: #f7fafd;
-    -fx-border-color: #2b4a6f;
+    -fx-background-color: -app-explain-node-bg;
+    -fx-border-color: -app-explain-node-border;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
@@ -50,10 +125,10 @@
 }
 
 .explain-node:hover {
-    -fx-background-color: #eaf2fb;
-    -fx-border-color: #4a78ab;
+    -fx-background-color: -app-explain-node-bg-hover;
+    -fx-border-color: -app-explain-node-border-hover;
     -fx-border-width: 1.6px;
-    -fx-effect: dropshadow(gaussian, rgba(43,74,111,0.35), 6, 0.2, 0, 1);
+    -fx-effect: dropshadow(gaussian, -app-explain-node-shadow, 6, 0.2, 0, 1);
 }
 
 .explain-node-subplan {
@@ -69,22 +144,62 @@
 
 .explain-caption-2 {
     -fx-font-size: 10px;
-    -fx-text-fill: #555555;
+    -fx-text-fill: -app-explain-caption2;
     -fx-text-alignment: center;
     -fx-alignment: center;
 }
 
 .explain-connector {
-    -fx-stroke: #7f9bb8;
+    -fx-stroke: -app-explain-connector;
     -fx-stroke-width: 1.4px;
 }
 
 .explain-connector-subplan {
     -fx-stroke-dash-array: 5 4;
-    -fx-stroke: #a0a0a0;
+    -fx-stroke: -app-explain-connector-subplan;
 }
 
 .explain-connector-label {
     -fx-font-size: 9px;
-    -fx-fill: #666666;
+    -fx-fill: -app-explain-connector-label;
 }
+
+/*
+ * EXPLAIN node glyphs. ExplainIcons draws plain JavaFX shapes; their colours live
+ * here so an already-rendered diagram restyles on a theme switch without being
+ * rebuilt. Stroke widths and Color.TRANSPARENT fills stay in Java — they are
+ * structure, not theme.
+ */
+.explain-glyph-box {
+    -fx-fill: -app-explain-glyph-fill;
+    -fx-stroke: -app-explain-glyph-stroke;
+}
+
+.explain-glyph-line {
+    -fx-stroke: -app-explain-glyph-stroke;
+}
+
+.explain-glyph-accent {
+    -fx-stroke: -app-explain-glyph-accent;
+}
+
+.explain-glyph-accent-fill {
+    -fx-fill: -app-explain-glyph-accent;
+    -fx-stroke: -app-explain-glyph-stroke;
+}
+
+.explain-glyph-text {
+    -fx-fill: -app-explain-glyph-accent;
+}
+
+.explain-glyph-text-stroke {
+    -fx-fill: -app-explain-glyph-stroke;
+}
+
+/* Query Tool scratch pad */
+.scratch-pad-header  { -fx-background-color: -app-panel-header-bg;
+                       -fx-border-color: transparent transparent -app-panel-header-border transparent; }
+.scratch-pad-caption { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: -app-panel-caption; }
+.scratch-pad-close   { -fx-padding: 0 4 0 4; -fx-background-color: transparent; -fx-font-size: 10px; }
+.scratch-pad-close:hover { -fx-background-color: -app-close-hover-bg; }
+.scratch-pad         { -fx-font-family: "Menlo", "Consolas", "monospace"; -fx-font-size: 12px; }

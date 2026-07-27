@@ -169,3 +169,10 @@ test shows a Stage.
   before touching `ThemeManager`'s window handling.
 - `-app-menu-bg` is intentionally unreferenced by `styles.css`. It is an audit anchor, not
   dead code.
+
+**A third dark-mode defect turned up after this landed** — the "Connect to Server" password
+dialog (`MainWindow.connectServer`) was the one `Dialog` construction site in the whole
+codebase missing its `ThemeManager.apply(...)` call, so it always rendered in bare Modena
+regardless of theme. Fixed by
+[plan-08b](plan-08b-connect-dialog-theme-fix.md) /
+[its SUMMARY](plan-08b-connect-dialog-theme-fix-SUMMARY.md).
