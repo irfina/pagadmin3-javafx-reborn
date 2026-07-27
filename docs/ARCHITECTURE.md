@@ -14,7 +14,8 @@ application, `REL-1_22_0_PATCHES` at <https://github.com/pgadmin-org/pgadmin3>).
 | Build | Maven (`javafx-maven-plugin` for `mvn javafx:run`, `maven-shade-plugin` for a runnable fat jar) | |
 | Database access | PostgreSQL JDBC (`org.postgresql:postgresql`) | pgAdmin III used libpq; JDBC is the Java equivalent |
 | SQL editor | RichTextFX (`CodeArea`) | Line numbers + regex-based SQL syntax highlighting, standing in for wxStyledTextCtrl/Scintilla |
-| Settings persistence | Jackson → `~/.pgadmin3-javafx-reborn/servers.json` | pgAdmin III used wxConfig/registry |
+| Settings persistence | Jackson → `~/.pgadmin3-javafx-reborn/servers.json` (registrations) and `preferences.json` (app settings) | pgAdmin III used wxConfig/registry |
+| Theming | Looked-up-colour tokens in `styles.css` + one sheet per theme, swapped by `ui/ThemeManager` | pgAdmin III 1.22 had no dark mode; this is an addition |
 
 ## How pgAdmin III concepts map onto this codebase
 
@@ -49,7 +50,8 @@ server registry (wxConfig)             model/ServerRegistry + ServerInfo (JSON)
 ```
 com.fxpgadmin
 ├── PgAdminApp, Launcher      – JavaFX Application entry + shaded-jar launcher
-├── model                     – ServerInfo, ServerRegistry (persisted registrations)
+├── model                     – ServerInfo, ServerRegistry (persisted registrations),
+│                               AppPreferences (persisted app settings, e.g. theme)
 ├── db                        – DbConnection (JDBC wrapper, identifier/literal quoting,
 │                               server_version_num detection), ServerSession (one
 │                               maintenance connection + one cached connection per database)
@@ -63,7 +65,8 @@ com.fxpgadmin
 ├── ui                        – MainWindow (menus, toolbar, browser tree, context menus,
 │                               drop/rename/truncate/count actions), DetailPane
 │                               (Properties / Statistics / Dependencies / Dependents / SQL pane),
-│                               ScratchPadPane (reusable hide/show side panel)
+│                               ScratchPadPane (reusable hide/show side panel),
+│                               Theme + ThemeManager (app-wide light/dark theming)
 ├── query                     – QueryToolWindow, SqlHighlighter, ResultTable
 ├── data                      – DataEditorWindow (editable grid)
 ├── tools                     – BackupDialog, RestoreDialog, ProcessDialog (external tool
@@ -163,6 +166,40 @@ Backup and Restore build `pg_dump` / `pg_restore` command lines from dialog opti
 via `ProcessBuilder` with `PGPASSWORD` set, streaming combined stdout/stderr into a progress
 window — the same delegation pgAdmin III used. Maintenance (VACUUM / ANALYZE / REINDEX / CLUSTER)
 runs as SQL over a dedicated connection.
+
+### Theming
+
+`ui/ThemeManager` is the single source of truth for appearance. It holds a `selected` theme
+(LIGHT / DARK / **SYSTEM**) and derives a read-only `effective` theme (LIGHT or DARK only),
+resolving SYSTEM through `Platform.getPreferences().colorSchemeProperty()` so the app follows
+the OS live. The selection persists via `model/AppPreferences` →
+`~/.pgadmin3-javafx-reborn/preferences.json` (the general settings store pgAdmin III kept in
+wxConfig; `ServerRegistry` remains separate), and `View > Theme` on `MainWindow` binds to it.
+
+The CSS is split three ways: `styles.css` carries **structure only** — every colour in it is
+an `-app-*` looked-up colour — while `theme-light.css` and `theme-dark.css` each assign that
+token set in a single `.root` block. The dark sheet additionally re-derives Modena from
+`-fx-base`/`-fx-background`/`-fx-control-inner-background`, which restyles the whole control
+set and flips its `ladder()` text rules to light automatically.
+
+**Two invariants for any new window:**
+
+1. Every `Scene` and every `Dialog` goes through `ThemeManager.apply(...)` — that is what both
+   applies the current theme and registers the scene for live restyling. Registration is by
+   weak reference, so closed windows unregister themselves; there is no cleanup call to
+   forget. A missed site renders in bare Modena and is obvious in dark mode.
+2. No colour literal in `styles.css`. Add the token to *both* theme sheets;
+   `ThemeContrastTest` fails on a token defined in only one, on an undefined token referenced
+   by `styles.css`, and on any palette pair below WCAG AA (4.5:1 text, 3:1 graphics).
+
+Colours that cannot be CSS (the EXPLAIN glyphs `ExplainIcons` draws as JavaFX shapes) are
+routed through `explain-glyph-*` style classes rather than `Color` constants, so an
+already-rendered diagram restyles on a switch without being rebuilt. The 16×16 PNG icons are
+palette images and cannot be recoloured by CSS, so a complete second set lives under
+`icons/dark/`, generated and audited by `tools/DarkIconGenerator.java`; `util/Icons` keys its
+cache by theme, prefers the dark file, falls back to the light one, and re-images live toolbar
+`ImageView`s (tracked weakly) on a switch. Window/Dock icons are deliberately *not* themed —
+they sit on OS chrome.
 
 ### Threading rules
 

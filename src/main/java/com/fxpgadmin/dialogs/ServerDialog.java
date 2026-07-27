@@ -1,6 +1,7 @@
 package com.fxpgadmin.dialogs;
 
 import com.fxpgadmin.model.ServerInfo;
+import com.fxpgadmin.ui.ThemeManager;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -20,6 +21,7 @@ public class ServerDialog {
     public static Optional<ServerInfo> show(ServerInfo existing) {
         ServerInfo info = existing != null ? existing : new ServerInfo();
         Dialog<ButtonType> dlg = new Dialog<>();
+        ThemeManager.apply(dlg);
         dlg.setTitle(existing != null ? "Server properties" : "New Server Registration");
 
         TextField name = new TextField(info.getName());

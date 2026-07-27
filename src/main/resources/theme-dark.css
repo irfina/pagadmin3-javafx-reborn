@@ -1,0 +1,62 @@
+/*
+ * Dark theme.
+ *
+ * Two halves:
+ *   1. a Modena re-derivation — JavaFX's default stylesheet computes almost every
+ *      control colour from -fx-base / -fx-background / -fx-control-inner-background,
+ *      and picks text colours with ladder() rules keyed off those same roots, so
+ *      restating the roots restyles the whole control set and flips its text to
+ *      light automatically;
+ *   2. the app's own -app-* tokens, consumed by styles.css.
+ *
+ * Every pair marked "AA" in docs/plan/plan-08-dark-light-theme.md §5.4 is asserted by
+ * ThemeContrastTest. Change a value here and run `mvn test` — do not relax the test.
+ */
+.root {
+    /* ---- Modena re-derivation ---- */
+    -fx-base: #3b3f43;
+    -fx-background: #2b2d30;
+    -fx-control-inner-background: #1e1f22;
+    -fx-control-inner-background-alt: derive(-fx-control-inner-background, 3%);
+    -fx-accent: #3574f0;
+    -fx-focus-color: #3574f0;
+    -fx-faint-focus-color: #3574f022;
+    /* Modena's default is `lightgrey`, a hard-coded literal no -fx-base change can
+       reach — an unfocused selected row would stay light grey with black-on-grey text. */
+    -fx-selection-bar-non-focused: #43454a;
+
+    /* ---- SQL syntax highlighting (Query Tool editor) ---- */
+    -app-sql-keyword: #569cd6;
+    -app-sql-string: #ce9178;
+    -app-sql-comment: #6a9955;
+    -app-sql-number: #c586c0;
+    -app-sql-ident: #9cdcfe;
+
+    /* ---- RichTextFX editor chrome ---- */
+    -app-editor-bg: #1e1f22;
+    -app-editor-caret: #d6d8dc;
+    -app-editor-selection: #3f5f8f;
+    -app-lineno-bg: #2b2d30;
+    -app-lineno-text: #9ba1a8;
+
+    /* ---- Graphical EXPLAIN diagram ---- */
+    -app-explain-canvas-bg: #232529;
+    -app-explain-node-bg: #2f3b4a;
+    -app-explain-node-bg-hover: #3a4a5e;
+    -app-explain-node-border: #7fa3c8;
+    -app-explain-node-border-hover: #9dbede;
+    -app-explain-node-shadow: rgba(0, 0, 0, 0.6);
+    -app-explain-caption2: #a8adb4;
+    -app-explain-connector: #6b87a5;
+    -app-explain-connector-subplan: #6e7480;
+    -app-explain-connector-label: #9ba1a8;
+    -app-explain-glyph-stroke: #a9c4e0;
+    -app-explain-glyph-fill: #3c4a5c;
+    -app-explain-glyph-accent: #8fb4dc;
+
+    /* ---- Panel headers (Query Tool scratch pad, and any future side panel) ---- */
+    -app-panel-header-bg: #33363a;
+    -app-panel-header-border: #46494e;
+    -app-panel-caption: #cfd2d6;
+    -app-close-hover-bg: #46494e;
+}

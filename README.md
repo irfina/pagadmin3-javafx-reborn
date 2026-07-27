@@ -10,6 +10,7 @@ A desktop PostgreSQL administration tool — a JavaFX re-implementation of the l
 - Edit Data grid with key-based updates, insert/delete, filter/sort
 - Backup / Restore (pg_dump / pg_restore), Maintenance (VACUUM/ANALYZE/REINDEX/CLUSTER)
 - Server Status (activity, locks, prepared transactions), Grant Wizard
+- Dark / light / follow-the-OS theme (View > Theme), applied instantly and remembered
 
 ## Run
 

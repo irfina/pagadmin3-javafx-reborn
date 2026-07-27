@@ -1,6 +1,7 @@
 package com.fxpgadmin.query.explain;
 
 import com.fxpgadmin.ui.DetailPane;
+import com.fxpgadmin.ui.ThemeManager;
 import com.fxpgadmin.util.UiUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -213,7 +214,9 @@ public class ExplainCanvas extends BorderPane {
         Stage dlg = new Stage();
         dlg.initModality(Modality.NONE);
         dlg.setTitle(node.qualifiedType());
-        dlg.setScene(new Scene(new BorderPane(table), 660, 420));
+        Scene scene = new Scene(new BorderPane(table), 660, 420);
+        ThemeManager.apply(scene);
+        dlg.setScene(scene);
         dlg.show();
     }
 

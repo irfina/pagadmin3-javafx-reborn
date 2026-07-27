@@ -1,5 +1,6 @@
 package com.fxpgadmin.tools;
 
+import com.fxpgadmin.ui.ThemeManager;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -23,7 +24,7 @@ public class ProcessDialog {
         stage.setTitle(title);
         TextArea output = new TextArea();
         output.setEditable(false);
-        output.setStyle("-fx-font-family: 'monospace';");
+        output.getStyleClass().add("mono-text");
         Button close = new Button("Close");
         close.setDisable(true);
         close.setOnAction(e -> stage.close());
@@ -31,7 +32,9 @@ public class ProcessDialog {
         BorderPane.setMargin(close, new javafx.geometry.Insets(8));
         root.setBottom(close);
         BorderPane.setAlignment(close, javafx.geometry.Pos.CENTER_RIGHT);
-        stage.setScene(new Scene(root, 750, 500));
+        Scene scene = new Scene(root, 750, 500);
+        ThemeManager.apply(scene);
+        stage.setScene(scene);
         stage.show();
 
         output.appendText("Running: " + String.join(" ", command) + "\n\n");

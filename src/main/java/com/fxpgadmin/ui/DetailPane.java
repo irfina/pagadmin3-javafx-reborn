@@ -35,7 +35,7 @@ public class DetailPane extends TabPane {
 
     public DetailPane() {
         sqlPane.setEditable(false);
-        sqlPane.setStyle("-fx-font-family: 'monospace';");
+        sqlPane.getStyleClass().add("mono-text");
         Tab tProps = new Tab("Properties", properties);
         Tab tStats = new Tab("Statistics", statistics);
         Tab tDeps = new Tab("Dependencies", dependencies);

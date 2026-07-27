@@ -19,9 +19,12 @@ packaging/macos/build-app.sh   # optional: local unsigned macOS .app (jpackage, 
 ```
 
 - `mvn test` runs the JUnit 5 suite under `src/test/java`: pure-logic unit tests
-  (`quoteIdent`/`quoteLiteral`, the EXPLAIN parse→layout→render pipeline over the fixtures)
-  plus headless-FX tests (a `CodeArea` construction smoke test; `ScratchPadPaneTest` for the
-  scratch pad's show/hide/divider-memory logic). It needs no DB and no display.
+  (`quoteIdent`/`quoteLiteral`, the EXPLAIN parse→layout→render pipeline over the fixtures,
+  `AppPreferencesTest`, and `ThemeContrastTest`'s WCAG audit of both theme palettes) plus
+  headless-FX tests (a `CodeArea` construction smoke test; `ScratchPadPaneTest` for the
+  scratch pad's show/hide/divider-memory logic; `ThemeManagerTest` for scene/dialog
+  restyling; `IconsThemeTest` for the dark icon set and live toolbar swap). It needs no DB
+  and no display.
   Broader verification (real-server tree-walk, live EXPLAIN) stays the opt-in harness
   described below.
 - **JavaFX version is pinned to 26 on purpose**: JavaFX 26 requires JDK 24+ class
@@ -50,8 +53,10 @@ window. `query/QueryToolWindow`'s Explain (F7) / Explain Analyze (Shift+F7) run 
 `EXPLAIN (FORMAT JSON [, ANALYZE, BUFFERS])` round trip through `query/explain/*`
 (`ExplainJsonParser` → `PlanNode` tree → `PlanLayout` + `ExplainCanvas` for the diagram,
 `ExplainTextRenderer` for the Messages-tab text). `ui/DetailPane` renders
-Properties/Statistics/Dependencies/Dependents + SQL pane.
-Registrations persist as JSON via `model/ServerRegistry` at `~/.pgadmin3-javafx-reborn/servers.json`.
+Properties/Statistics/Dependencies/Dependents + SQL pane. `ui/ThemeManager` owns the
+light/dark/system theme for the whole app. Registrations persist as JSON via
+`model/ServerRegistry` at `~/.pgadmin3-javafx-reborn/servers.json`; app settings (theme) via
+`model/AppPreferences` at `~/.pgadmin3-javafx-reborn/preferences.json`.
 
 ### Adding a new object type to the browser
 Touch these, in order:
@@ -82,6 +87,17 @@ Touch these, in order:
    New queries must degrade the same way, or state a floor.
 6. Identifiers/literals in generated SQL always go through `DbConnection.quoteIdent` /
    `quoteLiteral`.
+7. **Theming — every `Scene` and every `Dialog` goes through `ThemeManager.apply(...)`.**
+   That call both applies the current theme and registers the scene (weakly) for live
+   restyling. There is no fallback: a missed site renders in bare Modena and looks obviously
+   broken in dark mode. Re-grep after adding windows:
+   `grep -rn "new Scene\|new Alert\|new Dialog<\|new TextInputDialog\|new ChoiceDialog" src/main/java`.
+8. **No colour literal in `styles.css`** — it holds structure plus `-app-*` looked-up colors
+   only; the values live in `theme-light.css` / `theme-dark.css`, which must define the *same*
+   token set. `ThemeContrastTest` fails on a one-sided token, an undefined token, or a pair
+   below WCAG AA. Colours that cannot be CSS (EXPLAIN glyphs) use `explain-glyph-*` style
+   classes, never `Color` constants. Audit with:
+   `grep -nE '#[0-9a-fA-F]{3,8}|rgba?\(' src/main/resources/styles.css`.
 
 ## Verifying changes against a real server
 

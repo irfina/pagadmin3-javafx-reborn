@@ -30,10 +30,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -79,6 +81,9 @@ public class MainWindow {
         tree.setShowRoot(true);
         tree.setCellFactory(tv -> new BrowserCell());
         tree.getSelectionModel().selectedItemProperty().addListener((obs, old, item) -> onSelect(item));
+        // Tree cells pull their icon from Icons.image on updateItem, so re-running the
+        // cell factory is all it takes to re-icon the whole tree for the new theme.
+        ThemeManager.effectiveProperty().addListener((obs, old, now) -> tree.refresh());
         refreshServerList();
 
         SplitPane rightSplit = new SplitPane(detailPane, wrapSqlPane());
@@ -94,7 +99,7 @@ public class MainWindow {
         root.setBottom(statusBar);
 
         Scene scene = new Scene(root, 1280, 800);
-        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        ThemeManager.apply(scene);
         stage.setScene(scene);
         stage.setOnCloseRequest(e -> { if (!confirmExit()) e.consume(); });
         stage.setOnHidden(e -> shutdown());
@@ -158,7 +163,34 @@ public class MainWindow {
                 + " / JavaFX " + System.getProperty("javafx.version")));
         help.getItems().add(about);
 
-        return new MenuBar(file, tools, help);
+        return new MenuBar(file, buildViewMenu(), tools, help);
+    }
+
+    /** View &gt; Theme: Light / Dark / System, bound to {@link ThemeManager} (plan-08 §5.1). */
+    private Menu buildViewMenu() {
+        Menu theme = new Menu("Theme");
+        ToggleGroup group = new ToggleGroup();
+        Map<Theme, RadioMenuItem> items = new LinkedHashMap<>();
+
+        for (Theme t : new Theme[] { Theme.LIGHT, Theme.DARK, Theme.SYSTEM }) {
+            RadioMenuItem item = new RadioMenuItem(t.label());
+            item.setToggleGroup(group);
+            item.setOnAction(e -> ThemeManager.setSelected(t));
+            items.put(t, item);
+            theme.getItems().add(item);
+        }
+
+        // Bind rather than hand-sync: the property is the source of truth, so the radio
+        // stays correct even if the theme is changed from somewhere other than this menu.
+        items.get(ThemeManager.getSelected()).setSelected(true);
+        ThemeManager.selectedProperty().addListener((obs, old, now) -> {
+            RadioMenuItem item = items.get(now);
+            if (item != null) item.setSelected(true);
+        });
+
+        Menu view = new Menu("View");
+        view.getItems().add(theme);
+        return view;
     }
 
     private ToolBar buildToolBar() {
@@ -529,6 +561,7 @@ public class MainWindow {
             return;
         }
         TextInputDialog dlg = new TextInputDialog(o.getName());
+        ThemeManager.apply(dlg);
         dlg.setTitle("Rename");
         dlg.setHeaderText("New name for " + o.getName() + ":");
         dlg.showAndWait().ifPresent(newName -> {

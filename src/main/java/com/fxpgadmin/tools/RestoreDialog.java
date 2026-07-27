@@ -2,6 +2,7 @@ package com.fxpgadmin.tools;
 
 import com.fxpgadmin.db.ServerSession;
 import com.fxpgadmin.model.ServerInfo;
+import com.fxpgadmin.ui.ThemeManager;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -21,6 +22,7 @@ public class RestoreDialog {
 
     public static void show(ServerSession session, String database) {
         Dialog<ButtonType> dlg = new Dialog<>();
+        ThemeManager.apply(dlg);
         dlg.setTitle("Restore " + database);
 
         TextField fileField = new TextField();

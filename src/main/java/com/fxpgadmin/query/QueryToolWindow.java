@@ -8,6 +8,7 @@ import com.fxpgadmin.query.explain.ExplainResult;
 import com.fxpgadmin.query.explain.ExplainTextRenderer;
 import com.fxpgadmin.ui.ScratchPadPane;
 import com.fxpgadmin.util.CsvExporter;
+import com.fxpgadmin.ui.ThemeManager;
 import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
@@ -123,7 +124,7 @@ public class QueryToolWindow {
         editor.setContextMenu(buildEditorContextMenu());
 
         messages.setEditable(false);
-        messages.setStyle("-fx-font-family: 'monospace';");
+        messages.getStyleClass().add("mono-text");
         history.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && history.getSelectionModel().getSelectedItem() != null) {
                 String item = history.getSelectionModel().getSelectedItem();
@@ -151,7 +152,7 @@ public class QueryToolWindow {
         root.setBottom(buildStatusBar());
 
         Scene scene = new Scene(root, 1000, 700);
-        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        ThemeManager.apply(scene);
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.F5), this::executeQuery);
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.F7), () -> runExplain(false));
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.F7, KeyCombination.SHIFT_DOWN),

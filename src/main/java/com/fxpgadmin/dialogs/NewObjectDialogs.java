@@ -3,6 +3,7 @@ package com.fxpgadmin.dialogs;
 import com.fxpgadmin.browser.DbObject;
 import com.fxpgadmin.browser.ObjectType;
 import com.fxpgadmin.db.DbConnection;
+import com.fxpgadmin.ui.ThemeManager;
 import com.fxpgadmin.util.UiUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonType;
@@ -30,6 +31,7 @@ public final class NewObjectDialogs {
     /** @return true if an object was created */
     public static boolean newDatabase(DbConnection conn) {
         Dialog<ButtonType> dlg = new Dialog<>();
+        ThemeManager.apply(dlg);
         dlg.setTitle("New Database");
         TextField name = new TextField();
         TextField owner = new TextField();
@@ -54,6 +56,7 @@ public final class NewObjectDialogs {
 
     public static boolean newSchema(DbConnection conn) {
         Dialog<ButtonType> dlg = new Dialog<>();
+        ThemeManager.apply(dlg);
         dlg.setTitle("New Schema");
         TextField name = new TextField();
         TextField owner = new TextField();
@@ -71,6 +74,7 @@ public final class NewObjectDialogs {
 
     public static boolean newRole(DbConnection conn) {
         Dialog<ButtonType> dlg = new Dialog<>();
+        ThemeManager.apply(dlg);
         dlg.setTitle("New Role");
         TextField name = new TextField();
         PasswordField password = new PasswordField();

@@ -1,0 +1,45 @@
+/*
+ * Light theme — the app's original appearance, unchanged.
+ *
+ * Every value here is the exact literal that lived in styles.css before plan-08
+ * (or, where a rule is new, the JavaFX/RichTextFX default it replaces: white
+ * editor background, black caret, dodgerblue selection, #666 line numbers).
+ * Modena is left completely alone: no -fx-base override, no control re-derivation.
+ * Changing a value in this file changes the app's established look — don't.
+ */
+.root {
+    /* SQL syntax highlighting (Query Tool editor) */
+    -app-sql-keyword: #00007f;
+    -app-sql-string: #7f0000;
+    -app-sql-comment: #007f00;
+    -app-sql-number: #7f007f;
+    -app-sql-ident: #3f3f7f;
+
+    /* RichTextFX editor chrome */
+    -app-editor-bg: white;
+    -app-editor-caret: black;
+    -app-editor-selection: dodgerblue;
+    -app-lineno-bg: #f0f0f0;
+    -app-lineno-text: #666666;
+
+    /* Graphical EXPLAIN diagram */
+    -app-explain-canvas-bg: white;
+    -app-explain-node-bg: #f7fafd;
+    -app-explain-node-bg-hover: #eaf2fb;
+    -app-explain-node-border: #2b4a6f;
+    -app-explain-node-border-hover: #4a78ab;
+    -app-explain-node-shadow: rgba(43, 74, 111, 0.35);
+    -app-explain-caption2: #555555;
+    -app-explain-connector: #7f9bb8;
+    -app-explain-connector-subplan: #a0a0a0;
+    -app-explain-connector-label: #666666;
+    -app-explain-glyph-stroke: #2b4a6f;
+    -app-explain-glyph-fill: #dbe7f5;
+    -app-explain-glyph-accent: #4a78ab;
+
+    /* Panel headers (Query Tool scratch pad, and any future side panel) */
+    -app-panel-header-bg: #e8e8e8;
+    -app-panel-header-border: #c8c8c8;
+    -app-panel-caption: #333333;
+    -app-close-hover-bg: #d0d0d0;
+}

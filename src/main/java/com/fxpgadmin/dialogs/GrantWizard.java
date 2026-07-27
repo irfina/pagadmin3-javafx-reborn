@@ -2,6 +2,7 @@ package com.fxpgadmin.dialogs;
 
 import com.fxpgadmin.browser.DbObject;
 import com.fxpgadmin.db.DbConnection;
+import com.fxpgadmin.ui.ThemeManager;
 import com.fxpgadmin.util.UiUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonType;
@@ -43,6 +44,8 @@ public final class GrantWizard {
         };
 
         Dialog<ButtonType> dlg = new Dialog<>();
+
+        ThemeManager.apply(dlg);
         dlg.setTitle("Grant Wizard - " + target.qualifiedName());
 
         ComboBox<String> roleBox = new ComboBox<>();

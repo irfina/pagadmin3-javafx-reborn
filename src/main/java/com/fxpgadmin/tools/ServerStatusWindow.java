@@ -3,6 +3,7 @@ package com.fxpgadmin.tools;
 import com.fxpgadmin.db.DbConnection;
 import com.fxpgadmin.db.ServerSession;
 import com.fxpgadmin.query.ResultTable;
+import com.fxpgadmin.ui.ThemeManager;
 import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
@@ -76,7 +77,9 @@ public class ServerStatusWindow {
 
         BorderPane root = new BorderPane(tabs);
         root.setTop(toolbar);
-        stage.setScene(new Scene(root, 1100, 600));
+        Scene scene = new Scene(root, 1100, 600);
+        ThemeManager.apply(scene);
+        stage.setScene(scene);
         stage.setOnHidden(e -> {
             if (timeline != null) timeline.stop();
             if (conn != null) conn.close();

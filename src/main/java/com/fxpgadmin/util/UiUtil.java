@@ -1,5 +1,6 @@
 package com.fxpgadmin.util;
 
+import com.fxpgadmin.ui.ThemeManager;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -20,6 +21,7 @@ public final class UiUtil {
     public static void error(String title, String message) {
         Runnable show = () -> {
             Alert a = new Alert(Alert.AlertType.ERROR);
+            ThemeManager.apply(a);
             a.setTitle(title);
             a.setHeaderText(title);
             TextArea area = new TextArea(message);
@@ -34,6 +36,7 @@ public final class UiUtil {
 
     public static void info(String title, String message) {
         Alert a = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
+        ThemeManager.apply(a);
         a.setTitle(title);
         a.setHeaderText(title);
         a.getDialogPane().setContent(new Label(message));
@@ -42,6 +45,7 @@ public final class UiUtil {
 
     public static boolean confirm(String title, String message) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.YES, ButtonType.NO);
+        ThemeManager.apply(a);
         a.setTitle(title);
         a.setHeaderText(title);
         Optional<ButtonType> r = a.showAndWait();
@@ -53,6 +57,7 @@ public final class UiUtil {
     public static Answer confirmYesNoCancel(Window owner, String title, String message) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION, message,
                 ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+        ThemeManager.apply(a);
         a.setTitle(title);
         a.setHeaderText(title);
         if (owner != null) a.initOwner(owner);

@@ -1,6 +1,8 @@
 # Plan 08 — Dark/light theme toggle with reviewed font and icon colors
 
-**Status: planned — not yet implemented.**
+**Status: implemented** — see [plan-08-dark-light-theme-SUMMARY.md](plan-08-dark-light-theme-SUMMARY.md)
+for what shipped, the three deviations (notably §5.6's icon transform, which had to be
+replaced), and the macOS colour-scheme bug found during verification.
 Design + implementation plan for
 [issue #4](https://github.com/irfina/pagadmin3-javafx-reborn/issues/4) — a user-toggleable
 Light / Dark / System theme, applied immediately across every window and dialog, persisted

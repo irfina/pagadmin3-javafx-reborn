@@ -3,6 +3,7 @@ package com.fxpgadmin.data;
 import com.fxpgadmin.browser.DbObject;
 import com.fxpgadmin.db.DbConnection;
 import com.fxpgadmin.db.ServerSession;
+import com.fxpgadmin.ui.ThemeManager;
 import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
@@ -108,7 +109,11 @@ public class DataEditorWindow {
         bottom.setPadding(new Insets(4, 8, 4, 8));
         root.setBottom(bottom);
 
-        stage.setScene(new Scene(root, 1000, 650));
+        Scene scene = new Scene(root, 1000, 650);
+
+        ThemeManager.apply(scene);
+
+        stage.setScene(scene);
         stage.setOnHidden(e -> { if (conn != null) conn.close(); });
         stage.show();
         loadPrimaryKey();

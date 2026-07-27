@@ -3,6 +3,7 @@ package com.fxpgadmin.tools;
 import com.fxpgadmin.browser.DbObject;
 import com.fxpgadmin.db.DbConnection;
 import com.fxpgadmin.db.ServerSession;
+import com.fxpgadmin.ui.ThemeManager;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -49,7 +50,7 @@ public class MaintenanceDialog {
 
         TextArea output = new TextArea();
         output.setEditable(false);
-        output.setStyle("-fx-font-family: 'monospace';");
+        output.getStyleClass().add("mono-text");
 
         Button run = new Button("OK");
         Button close = new Button("Close");
@@ -105,7 +106,9 @@ public class MaintenanceDialog {
 
         BorderPane root = new BorderPane(output);
         root.setLeft(options);
-        stage.setScene(new Scene(root, 800, 450));
+        Scene scene = new Scene(root, 800, 450);
+        ThemeManager.apply(scene);
+        stage.setScene(scene);
         stage.show();
     }
 }

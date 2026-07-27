@@ -26,7 +26,8 @@ per-feature migration notes, and issues found and fixed after the initial port.
 | wxWidgets (wxFrame, wxTreeCtrl, wxListCtrl, wxAuiNotebook) | JavaFX (Stage, TreeView, TableView, TabPane, SplitPane) | |
 | libpq (`pgConn`, `pgSet`) | PostgreSQL JDBC (`java.sql`) | `DbConnection` wraps `java.sql.Connection` and plays the role of `pgConn`; JDBC `ResultSet` replaces `pgSet` |
 | wxStyledTextCtrl (Scintilla) SQL editor | RichTextFX `CodeArea` | regex-based highlighter (`SqlHighlighter`) replaces Scintilla lexer |
-| wxConfig / Windows registry / `~/.pgadmin3` | Jackson JSON at `~/.pgadmin3-javafx-reborn/servers.json` | `ServerRegistry` |
+| wxConfig / Windows registry / `~/.pgadmin3` | Jackson JSON at `~/.pgadmin3-javafx-reborn/servers.json` + `preferences.json` | `ServerRegistry`, `AppPreferences` |
+| (no equivalent — 1.22 had no dark mode) | Looked-up-colour tokens + one stylesheet per theme, swapped by `ui/ThemeManager` | deliberate addition, see §5.11 |
 | wxThread + event posting | Java daemon threads + `Platform.runLater` | identical rule: no DB I/O on the UI thread |
 | Embedded pg_dump/pg_restore invocation (`frmBackup` → external process) | `ProcessBuilder` + streamed output window (`ProcessDialog`) | same delegation strategy |
 
@@ -203,6 +204,29 @@ which replaces pgAdmin III's hand-rolled catalog joins for naming referenced obj
   function/schema/database) with per-kind privilege sets, PUBLIC, and WITH GRANT OPTION;
   pgAdmin III's multi-object selection list was not ported.
 
+### 5.11 Theming (an addition, not a port)
+
+pgAdmin III 1.22 has no dark mode and no appearance preference, so unlike every other
+subsystem here there is no reference behaviour to mirror. The **light theme is the port** —
+it reproduces the original appearance colour-for-colour — and dark is a deliberate,
+additive divergence.
+
+`styles.css` was reduced to structure plus `-app-*` looked-up colours; `theme-light.css`
+restates the original values, `theme-dark.css` supplies a dark palette and re-derives Modena
+from `-fx-base`/`-fx-background`/`-fx-control-inner-background`. `ui/ThemeManager` swaps the
+second sheet on every registered `Scene` at once, so a switch needs no restart and no
+per-window bookkeeping. "System" resolves through `Platform.getPreferences()` and follows the
+OS live.
+
+Two things resisted CSS and needed their own mechanisms: the EXPLAIN glyphs, which
+`ExplainIcons` draws as JavaFX shapes (now carrying `explain-glyph-*` style classes instead
+of `Color` constants, so an open diagram restyles in place), and the 94 16×16 palette PNGs
+inherited from pgAdmin III, which cannot be recoloured at all — a complete second set was
+generated under `icons/dark/` by a committed, re-runnable tool and audited for legibility.
+See `docs/plan/plan-08-dark-light-theme.md` and its `-SUMMARY.md`; the summary records why
+the planned pixel transform had to be replaced, and the macOS
+`apple.awt.application.appearance` trap that otherwise makes "System" silently never work.
+
 ## 6. Threading model
 
 Single rule, enforced everywhere: **the FX thread never touches JDBC**. Catalog loads,
@@ -216,8 +240,14 @@ wxThread workers (query tool), and is why browsing stays responsive on slow link
 `~/.pgadmin3-javafx-reborn/servers.json` — a Jackson-serialized `List<ServerInfo>`:
 name, group, host, port, maintenanceDb, username, sslMode, savePassword,
 encodedPassword (base64), connectTimeoutSeconds. Equivalent to pgAdmin III's
-`Servers/N/…` registry keys. No other state is persisted (window layouts, favourites,
-macros were not migrated).
+`Servers/N/…` registry keys.
+
+`~/.pgadmin3-javafx-reborn/preferences.json` — general application settings
+(`model/AppPreferences`), the counterpart of pgAdmin III's wxConfig settings store. One key
+today, `theme` (`LIGHT`/`DARK`/`SYSTEM`). Deliberately backed by a map rather than typed
+fields and read leniently, so an unrecognized or hand-broken file degrades to defaults and
+keys written by a future build survive a rewrite. Window layouts, favourites and macros are
+still not persisted.
 
 ## 8. Intentionally not migrated
 
@@ -250,7 +280,15 @@ These are recorded because each one is a lesson about the C++→Java translation
    database even for DATABASE nodes; non-connectable databases (`datallowconn = false`)
    threw. DATABASE nodes are now described from the maintenance connection, matching
    `MainWindow.connFor`.
-3. **`VirtualFlow` "index exceeds maxCellCount" INFO log.** With unlimited rows and
+3. **macOS never reported the OS colour scheme.** With the dark theme (§5.11) added,
+   `Platform.getPreferences().getColorScheme()` returned LIGHT forever on macOS, so the
+   default "System" setting would have been permanently light on the primary development
+   platform — silently, with only a JavaFX startup warning to show for it. JavaFX only
+   delegates to the real system appearance when `apple.awt.application.appearance=system` is
+   set *before* AWT or the glass toolkit initializes; `PgAdminApp.main` now sets it as its
+   first statement. Found by reading the smoke-launch log, not by testing — a reminder that
+   the "only expected output is JavaFX warnings" check is worth actually reading.
+4. **`VirtualFlow` "index exceeds maxCellCount" INFO log.** With unlimited rows and
    multi-line cell values (variable row heights), JavaFX's estimated scroll math
    overshoots at the bottom of the grid. Reproduced in isolation; fixed by
    `setFixedCellSize(24)` on the data grid and result tables, which switches VirtualFlow
