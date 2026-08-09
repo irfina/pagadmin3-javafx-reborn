@@ -1,6 +1,9 @@
 # Plan 09 — Copy/paste of cell values in the result and Edit Data grids
 
-**Status: planned, not started.** Design + implementation plan for
+**Status: implemented, automated verification green. Manual §7 checklist against a live
+server not yet run — see
+[plan-09-grid-copy-paste-SUMMARY.md](plan-09-grid-copy-paste-SUMMARY.md).** Design +
+implementation plan for
 [issue #5](https://github.com/irfina/pgadmin3-javafx-reborn/issues/5) — give the Query Tool's
 read-only result grid a clipboard **copy**, and the Edit Data grid both **copy** and **paste**,
 with Ctrl/Cmd+C / Ctrl/Cmd+V plus discoverable right-click equivalents. Today the only way to
@@ -441,45 +444,45 @@ unaffected. Do not introduce a colour to signal "cell selected" — that is Mode
 Work top to bottom; each task compiles on its own.
 
 ### Task 1 — `src/main/java/com/fxpgadmin/util/GridClipboard.java`
-- [ ] Create the class per §5.1: `encode`, `decode`, `selectionAsText`, `copySelection`,
+- [x] Create the class per §5.1: `encode`, `decode`, `selectionAsText`, `copySelection`,
       `clipboardBlock`, `clipboardHasText`, `installCopy`, `installPaste`.
-- [ ] Javadoc cites `ctl/ctlSQLGrid.cpp:200` and `frm/frmEditGrid.cpp:3020` as the origins and
+- [x] Javadoc cites `ctl/ctlSQLGrid.cpp:200` and `frm/frmEditGrid.cpp:3020` as the origins and
       states the three divergences (tab separator, escape-by-need quoting, block paste).
-- [ ] Keep `encode`/`decode` free of any JavaFX import so they stay unit-testable without a
+- [x] Keep `encode`/`decode` free of any JavaFX import so they stay unit-testable without a
       toolkit.
-- [ ] `installCopy` uses `addEventHandler(KeyEvent.KEY_PRESSED, …)` + `SHORTCUT_DOWN`, and
+- [x] `installCopy` uses `addEventHandler(KeyEvent.KEY_PRESSED, …)` + `SHORTCUT_DOWN`, and
       consumes the event only when it acted.
-- [ ] `mvn -q compile`.
+- [x] `mvn -q compile`.
 
 ### Task 2 — `query/ResultTable`
-- [ ] `col.setUserData(idx)` in `load()`.
-- [ ] `headerNameOf(TableColumn<?,?>)` with the `\n`-split fallback.
-- [ ] `GridClipboard.installCopy(this, this::headerNameOf)` and `setContextMenu(buildContextMenu())`
+- [x] `col.setUserData(idx)` in `load()`.
+- [x] `headerNameOf(TableColumn<?,?>)` with the `\n`-split fallback.
+- [x] `GridClipboard.installCopy(this, this::headerNameOf)` and `setContextMenu(buildContextMenu())`
       in the constructor; `buildContextMenu()` per §5.2 with the `setOnShowing` enable/disable.
-- [ ] Do **not** change `NULL_DISPLAY`, `allRows()`, `setFixedCellSize(24)` or the
+- [x] Do **not** change `NULL_DISPLAY`, `allRows()`, `setFixedCellSize(24)` or the
       `Platform.runLater` hand-off in `load()`.
-- [ ] `mvn -q compile`.
+- [x] `mvn -q compile`.
 
 ### Task 3 — `data/DataEditorWindow` copy
-- [ ] `grid.getSelectionModel().setCellSelectionEnabled(true)` in `show()`.
-- [ ] `col.setUserData(i)` in `buildColumns`.
-- [ ] `headerNameOf` returning `columnNames.get(modelIdx)` (no `[PK]` marker, no type line).
-- [ ] `GridClipboard.installCopy(grid, this::headerNameOf)`.
-- [ ] `mvn -q compile`.
+- [x] `grid.getSelectionModel().setCellSelectionEnabled(true)` in `show()`.
+- [x] `col.setUserData(i)` in `buildColumns`.
+- [x] `headerNameOf` returning `columnNames.get(modelIdx)` (no `[PK]` marker, no type line).
+- [x] `GridClipboard.installCopy(grid, this::headerNameOf)`.
+- [x] `mvn -q compile`.
 
 ### Task 4 — `data/DataEditorWindow` paste
-- [ ] Hoist `editable` to a field; assign it in `buildColumns` exactly where it is computed now.
-- [ ] Change `commitCellEdit` to return `boolean` (`false` only on `SQLException`).
-- [ ] Add `pasteFromClipboard()` per §5.5, including `grid.edit(-1, null)`, the clipping bounds,
+- [x] Hoist `editable` to a field; assign it in `buildColumns` exactly where it is computed now.
+- [x] Change `commitCellEdit` to return `boolean` (`false` only on `SQLException`).
+- [x] Add `pasteFromClipboard()` per §5.5, including `grid.edit(-1, null)`, the clipping bounds,
       the unchanged-value skip, the abort-on-failure, `grid.refresh()` and the status line.
-- [ ] `GridClipboard.installPaste(grid, this::pasteFromClipboard)`.
-- [ ] Context menu per §5.5 (Copy / Copy with column names / Paste / Select All / Delete row(s))
+- [x] `GridClipboard.installPaste(grid, this::pasteFromClipboard)`.
+- [x] Context menu per §5.5 (Copy / Copy with column names / Paste / Select All / Delete row(s))
       with `setOnShowing` enablement.
-- [ ] Leave `refresh()`, `insertRow()`, `whereForRow()` and `loadPrimaryKey()` untouched.
-- [ ] `mvn -q compile`.
+- [x] Leave `refresh()`, `insertRow()`, `whereForRow()` and `loadPrimaryKey()` untouched.
+- [x] `mvn -q compile`.
 
 ### Task 5 — Tests
-- [ ] `src/test/java/com/fxpgadmin/util/GridClipboardEncodingTest.java` — pure logic, no FX:
+- [x] `src/test/java/com/fxpgadmin/util/GridClipboardEncodingTest.java` — pure logic, no FX:
       1. plain block round-trips (`encode` → `decode` → equal);
       2. a value containing a tab is quoted, and decodes back with the tab intact;
       3. a value containing `\n` and one containing `"` likewise (inner quotes doubled);
@@ -487,7 +490,7 @@ Work top to bottom; each task compiles on its own.
       5. empty cells survive: `a\t\tc` decodes to three cells with a middle `""`;
       6. `\r\n` and lone `\r` line endings both decode; a single trailing newline is dropped;
       7. ragged input (`a\tb` then `c`) decodes without throwing.
-- [ ] `src/test/java/com/fxpgadmin/util/GridClipboardSelectionTest.java` — headless FX, modelled
+- [x] `src/test/java/com/fxpgadmin/util/GridClipboardSelectionTest.java` — headless FX, modelled
       on [`ScratchPadPaneTest`](../../src/test/java/com/fxpgadmin/ui/ScratchPadPaneTest.java)
       (`Platform.startup` + `CountDownLatch` + `IllegalStateException` fallback; Surefire already
       passes `-Dglass.platform=headless`). Build a 4×3 `TableView<ObservableList<String>>` with
@@ -500,31 +503,31 @@ Work top to bottom; each task compiles on its own.
       5. `selectAll()` → all 12 cells, and `getSelectedItems()` has 4 distinct rows (this is
          the regression guard for `deleteRows()`, §5.3);
       6. empty selection → `""`.
-- [ ] **Do not** call `Clipboard.getSystemClipboard()` from any test — a headless glass
+- [x] **Do not** call `Clipboard.getSystemClipboard()` from any test — a headless glass
       platform has no system clipboard and it would be flaky or fatal. That is exactly why
       `selectionAsText` is separate from `copySelection`.
-- [ ] `mvn test` — whole suite green.
+- [x] `mvn test` — whole suite green.
 
 ### Task 6 — Docs
-- [ ] `docs/SUMMARY.md`, "Query Tool (frmQuery)": add
+- [x] `docs/SUMMARY.md`, "Query Tool (frmQuery)": add
       `- ✅ **Copy from the result grid** — Ctrl/Cmd+C or right-click → Copy; tab-separated,
       quoted only when a value contains a tab/newline/quote; "Copy with column names" for a
       header line`.
-- [ ] `docs/SUMMARY.md`, "Edit Data (frmEditGrid)": add the same copy bullet plus
+- [x] `docs/SUMMARY.md`, "Edit Data (frmEditGrid)": add the same copy bullet plus
       `- ✅ **Paste** — Ctrl/Cmd+V fills a block from the clipboard, anchored at the selection,
       clipped to the grid, one key-based UPDATE per changed cell; blocked on read-only grids`,
       and note that the grid now selects by cell.
-- [ ] `docs/migration-design.md` §5.6/§5.7: record the port of `ctlSQLGrid::Copy()` and
+- [x] `docs/migration-design.md` §5.6/§5.7: record the port of `ctlSQLGrid::Copy()` and
       `sqlTable::Paste()` and the five divergences from §1.1.
-- [ ] `CLAUDE.md` architecture paragraph: one clause naming `util/GridClipboard` as the shared
+- [x] `CLAUDE.md` architecture paragraph: one clause naming `util/GridClipboard` as the shared
       grid clipboard, so the next grid added wires it instead of reinventing it.
 
 ### Task 7 — Build + manual verification
-- [ ] `mvn package`, then
+- [x] `mvn package`, then
       `java -jar target/pgadmin3-javafx-reborn-1.0.0.jar > /tmp/app.log 2>&1 &`
 - [ ] Walk §7 against a real server (a `postgres:18` container per CLAUDE.md is enough); seed a
       table with a PK, a text column, a nullable column and a numeric column, plus one view.
-- [ ] `/tmp/app.log` must hold nothing beyond the usual JavaFX classpath/native-access warnings.
+- [x] `/tmp/app.log` must hold nothing beyond the usual JavaFX classpath/native-access warnings.
 
 ## 7. Verification
 

@@ -63,13 +63,22 @@ the legacy application's feature set.
   auto-reconnect
 - ✅ **Scratch pad** — plain-text side panel (View > Scratch pad, Ctrl+Alt+S, or the
   editor's right-click menu); per-window, in-memory, never executed or saved
+- ✅ **Copy from the result grid** — Ctrl/Cmd+C or right-click → Copy; tab-separated,
+  quoted only when a value contains a tab/newline/quote; "Copy with column names" for a
+  header line
 
 ### Edit Data (frmEditGrid)
-- ✅ Grid view of tables/views with max-rows selector (100/500/1000/all)
+- ✅ Grid view of tables/views with max-rows selector (100/500/1000/all); the grid selects
+  by cell rather than by row
 - ✅ In-place cell editing with primary-key-based UPDATE; `<null>` sentinel for NULLs
 - ✅ Insert row (form dialog; empty = DEFAULT), delete selected rows
 - ✅ Filter (WHERE) and sort (ORDER BY) inputs, refresh
 - ✅ Read-only fallback when no primary key / not a plain table (as pgAdmin III)
+- ✅ **Copy from the grid** — Ctrl/Cmd+C or right-click → Copy; tab-separated,
+  quoted only when a value contains a tab/newline/quote; "Copy with column names" for a
+  header line
+- ✅ **Paste** — Ctrl/Cmd+V fills a block from the clipboard, anchored at the selection,
+  clipped to the grid, one key-based UPDATE per changed cell; blocked on read-only grids
 
 ### Appearance
 - ✅ **Dark / light theme** — View > Theme > Light / Dark / System; applied immediately to

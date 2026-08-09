@@ -4,6 +4,7 @@ import com.fxpgadmin.browser.DbObject;
 import com.fxpgadmin.db.DbConnection;
 import com.fxpgadmin.db.ServerSession;
 import com.fxpgadmin.ui.ThemeManager;
+import com.fxpgadmin.util.GridClipboard;
 import com.fxpgadmin.util.Icons;
 import com.fxpgadmin.util.UiUtil;
 import javafx.application.Platform;
@@ -12,9 +13,13 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
@@ -55,6 +60,7 @@ public class DataEditorWindow {
     private List<Integer> pkIndexes = new ArrayList<>();
     private int rowLimit = 500;
     private Stage stage;
+    private boolean editable;
 
     public DataEditorWindow(ServerSession session, DbObject table) {
         this.session = session;
@@ -74,10 +80,14 @@ public class DataEditorWindow {
 
         grid.setEditable(true);
         grid.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        grid.getSelectionModel().setCellSelectionEnabled(true);
         grid.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         // Fixed row height keeps VirtualFlow on exact (non-estimated) scroll math:
         // avoids the "index exceeds maxCellCount" drift and speeds up huge results.
         grid.setFixedCellSize(24);
+        GridClipboard.installCopy(grid, this::headerNameOf);
+        GridClipboard.installPaste(grid, this::pasteFromClipboard);
+        grid.setContextMenu(buildContextMenu());
 
         filterField.setPromptText("WHERE clause (without WHERE)");
         filterField.setPrefWidth(280);
@@ -181,7 +191,7 @@ public class DataEditorWindow {
     }
 
     private void buildColumns(ObservableList<ObservableList<String>> data) {
-        boolean editable = !pkIndexes.isEmpty() && table.getType() == com.fxpgadmin.browser.ObjectType.TABLE;
+        editable = !pkIndexes.isEmpty() && table.getType() == com.fxpgadmin.browser.ObjectType.TABLE;
         grid.getColumns().clear();
         for (int i = 0; i < columnNames.size(); i++) {
             final int idx = i;
@@ -194,11 +204,20 @@ public class DataEditorWindow {
             col.setEditable(editable);
             col.setOnEditCommit(ev -> commitCellEdit(ev.getRowValue(), idx, ev.getNewValue()));
             col.setPrefWidth(120);
+            col.setUserData(idx);
             grid.getColumns().add(col);
         }
         grid.setItems(data);
         status.setText(data.size() + " rows"
                 + (editable ? "" : "  (read-only: no primary key or not a table)"));
+    }
+
+    private String headerNameOf(TableColumn<?, ?> col) {
+        Object tag = col.getUserData();
+        if (tag instanceof Integer idx && idx >= 0 && idx < columnNames.size()) {
+            return columnNames.get(idx);
+        }
+        return col.getText();
     }
 
     private String whereForRow(ObservableList<String> row) {
@@ -211,9 +230,10 @@ public class DataEditorWindow {
         return where.toString();
     }
 
-    private void commitCellEdit(ObservableList<String> row, int colIdx, String newValue) {
+    /** @return false only when the UPDATE throws; true for a successful write or a no-op. */
+    private boolean commitCellEdit(ObservableList<String> row, int colIdx, String newValue) {
         String oldValue = row.get(colIdx);
-        if (newValue == null || newValue.equals(oldValue)) return;
+        if (newValue == null || newValue.equals(oldValue)) return true;
         String valueSql = NULL_DISPLAY.equals(newValue) ? "NULL" : quoteLiteral(newValue);
         String sql = "UPDATE " + table.qualifiedName()
                 + " SET " + quoteIdent(columnNames.get(colIdx)) + " = " + valueSql
@@ -222,10 +242,77 @@ public class DataEditorWindow {
             conn.execute(sql);
             row.set(colIdx, newValue);
             status.setText("Row updated.");
+            return true;
         } catch (SQLException e) {
             UiUtil.error("Update failed", e);
             grid.refresh();
+            return false;
         }
+    }
+
+    private void pasteFromClipboard() {
+        if (!editable) {
+            UiUtil.error("Paste", "This grid is read-only: the table has no primary key, "
+                    + "or it is not a plain table.");
+            return;
+        }
+        List<List<String>> block = GridClipboard.clipboardBlock();
+        if (block.isEmpty()) return;
+
+        grid.edit(-1, null); // close any open cell editor first
+
+        var cells = grid.getSelectionModel().getSelectedCells();
+        int anchorRow, anchorCol;
+        if (!cells.isEmpty()) {
+            anchorRow = cells.stream().mapToInt(TablePosition::getRow).min().getAsInt();
+            anchorCol = cells.stream().mapToInt(TablePosition::getColumn).min().getAsInt();
+        } else {
+            TablePosition<?, ?> f = grid.getFocusModel().getFocusedCell();
+            if (f == null || f.getRow() < 0 || f.getTableColumn() == null) return;
+            anchorRow = f.getRow();
+            anchorCol = f.getColumn();
+        }
+
+        int written = 0;
+        boolean failed = false;
+        outer:
+        for (int r = 0; r < block.size() && anchorRow + r < grid.getItems().size(); r++) {
+            ObservableList<String> rowItem = grid.getItems().get(anchorRow + r);
+            List<String> line = block.get(r);
+            for (int c = 0; c < line.size() && anchorCol + c < grid.getColumns().size(); c++) {
+                int modelCol = (Integer) grid.getColumns().get(anchorCol + c).getUserData();
+                String value = line.get(c);
+                if (value.equals(rowItem.get(modelCol))) continue; // unchanged: no SQL
+                if (!commitCellEdit(rowItem, modelCol, value)) { failed = true; break outer; }
+                written++;
+            }
+        }
+        grid.refresh(); // model mutation alone does not repaint
+        status.setText(written + " cell(s) pasted" + (failed ? " before the error above." : "."));
+    }
+
+    private ContextMenu buildContextMenu() {
+        MenuItem copy = new MenuItem("Copy");
+        copy.setOnAction(e -> GridClipboard.copySelection(grid, false, this::headerNameOf));
+        MenuItem copyHeaders = new MenuItem("Copy with column names");
+        copyHeaders.setOnAction(e -> GridClipboard.copySelection(grid, true, this::headerNameOf));
+        MenuItem paste = new MenuItem("Paste");
+        paste.setOnAction(e -> pasteFromClipboard());
+        MenuItem selectAll = new MenuItem("Select All");
+        selectAll.setOnAction(e -> grid.getSelectionModel().selectAll());
+        MenuItem deleteRows = new MenuItem("Delete row(s)");
+        deleteRows.setOnAction(e -> deleteRows());
+
+        ContextMenu menu = new ContextMenu(copy, copyHeaders, paste, new SeparatorMenuItem(),
+                selectAll, new SeparatorMenuItem(), deleteRows);
+        menu.setOnShowing(e -> {
+            boolean hasSelection = !grid.getSelectionModel().getSelectedCells().isEmpty();
+            copy.setDisable(!hasSelection);
+            copyHeaders.setDisable(!hasSelection);
+            deleteRows.setDisable(!hasSelection);
+            paste.setDisable(!editable || !GridClipboard.clipboardHasText());
+        });
+        return menu;
     }
 
     private void insertRow() {

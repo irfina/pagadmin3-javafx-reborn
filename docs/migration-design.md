@@ -164,6 +164,13 @@ which replaces pgAdmin III's hand-rolled catalog joins for naming referenced obj
   shown/hidden state and divider width are **per-window, in-memory only** — III persisted
   the whole AUI perspective to disk, which this app does not have a preferences store for
   yet. See `docs/plan/plan-07-query-scratch-pad.md` for the full design.
+- **Grid clipboard copy** ports `ctlSQLGrid::Copy()` (`ctl/ctlSQLGrid.cpp:200`) as
+  `util/GridClipboard`, shared with the edit grid below. Ctrl/Cmd+C on the grid (a bubbling
+  `addEventHandler`, not a filter, so an open SQL-editor selection still wins) plus a
+  right-click menu (Copy / Copy with column names / Select All) that III's read-only result
+  grid never had. See `docs/plan/plan-09-grid-copy-paste.md` for the full design and its
+  divergences from III (tab separator instead of `;`, quote-by-need instead of
+  quote-by-column-type, no escaping in III at all).
 
 ### 5.7 Edit grid (`frmEditGrid`)
 - Primary key columns read from `pg_index (indisprimary)`; without a PK — or for views —
@@ -175,6 +182,18 @@ which replaces pgAdmin III's hand-rolled catalog joins for naming referenced obj
   key-based; filter/sort append raw `WHERE`/`ORDER BY` fragments like pgAdmin III's
   filter/sort dialog.
 - Row-limit selector (100/500/1000/all) replaces pgAdmin III's "rows to fetch" setting.
+- **Clipboard copy and paste**, also via `util/GridClipboard`: cell selection is enabled
+  (III's grid always selected by cell; this grid previously selected whole rows) so a click
+  now targets one cell. Paste ports `sqlTable::Paste()` (`frm/frmEditGrid.cpp:3020`) but,
+  unlike III, fills a **rectangular block anchored at the current selection**, clipped to the
+  grid (never grows rows or wraps), instead of III's single-row paste into a trailing
+  new-row placeholder — this app has no such placeholder, since inserts already go through
+  the form dialog above. Each changed cell becomes one `UPDATE` through the existing
+  `commitCellEdit`, so the read-only-without-PK rule and the `<null>` mapping are reused
+  verbatim; the paste aborts at the first server error, leaving already-written cells in
+  place. Neither III's `serial`-column confirmation nor its unsaved-row gate apply, because
+  this window has no deferred-save state to protect. See
+  `docs/plan/plan-09-grid-copy-paste.md`.
 
 ### 5.8 External tools (`frmBackup`/`frmRestore`)
 - Option checkboxes map 1:1 to `pg_dump`/`pg_restore` flags (`-F c|t|p|d`, `-a`, `-s`,

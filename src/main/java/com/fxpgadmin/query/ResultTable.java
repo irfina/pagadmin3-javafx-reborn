@@ -1,8 +1,12 @@
 package com.fxpgadmin.query;
 
+import com.fxpgadmin.util.GridClipboard;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -27,6 +31,35 @@ public class ResultTable extends TableView<ObservableList<String>> {
         // avoids the "index exceeds maxCellCount" drift and speeds up huge results.
         setFixedCellSize(24);
         setPlaceholder(new javafx.scene.control.Label(""));
+        GridClipboard.installCopy(this, this::headerNameOf);
+        setContextMenu(buildContextMenu());
+    }
+
+    private String headerNameOf(TableColumn<?, ?> col) {
+        Object tag = col.getUserData();
+        if (tag instanceof Integer idx && idx >= 0 && idx < columnNames.size()) {
+            return columnNames.get(idx);
+        }
+        String text = col.getText();
+        int nl = text.indexOf('\n');
+        return nl < 0 ? text : text.substring(0, nl);
+    }
+
+    private ContextMenu buildContextMenu() {
+        MenuItem copy = new MenuItem("Copy");
+        copy.setOnAction(e -> GridClipboard.copySelection(this, false, this::headerNameOf));
+        MenuItem copyHeaders = new MenuItem("Copy with column names");
+        copyHeaders.setOnAction(e -> GridClipboard.copySelection(this, true, this::headerNameOf));
+        MenuItem selectAll = new MenuItem("Select All");
+        selectAll.setOnAction(e -> getSelectionModel().selectAll());
+
+        ContextMenu menu = new ContextMenu(copy, copyHeaders, new SeparatorMenuItem(), selectAll);
+        menu.setOnShowing(e -> {
+            boolean hasSelection = !getSelectionModel().getSelectedCells().isEmpty();
+            copy.setDisable(!hasSelection);
+            copyHeaders.setDisable(!hasSelection);
+        });
+        return menu;
     }
 
     /** Loads all rows (up to maxRows; 0 = unlimited). Returns number of rows loaded. */
@@ -46,6 +79,7 @@ public class ResultTable extends TableView<ObservableList<String>> {
                     new javafx.beans.property.SimpleStringProperty(cd.getValue().get(idx)));
             col.setCellFactory(TextFieldTableCell.forTableColumn());
             col.setPrefWidth(Math.min(300, Math.max(80, name.length() * 12)));
+            col.setUserData(idx);
             newCols.add(col);
         }
 

@@ -55,7 +55,10 @@ window. `query/QueryToolWindow`'s Explain (F7) / Explain Analyze (Shift+F7) run 
 (`ExplainJsonParser` → `PlanNode` tree → `PlanLayout` + `ExplainCanvas` for the diagram,
 `ExplainTextRenderer` for the Messages-tab text). `ui/DetailPane` renders
 Properties/Statistics/Dependencies/Dependents + SQL pane. `ui/ThemeManager` owns the
-light/dark/system theme for the whole app. Registrations persist as JSON via
+light/dark/system theme for the whole app. `util/GridClipboard` is the shared clipboard
+copy/paste for every `TableView`-based grid (`query/ResultTable`, `data/DataEditorWindow`,
+and by extension the Server Status grids); wire a new grid through it rather than
+reinventing copy/paste. Registrations persist as JSON via
 `model/ServerRegistry` at `~/.pgadmin3-javafx-reborn/servers.json`; app settings (theme) via
 `model/AppPreferences` at `~/.pgadmin3-javafx-reborn/preferences.json`.
 
